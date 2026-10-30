@@ -25,7 +25,7 @@
 
 | 项 | 状态 |
 | --- | --- |
-| Docker worker 镜像 | **构建 + 启动成功**；应用因 `/app/app` 路径越界 import 失败，已修，待重跑 |
+| Docker worker 镜像 | **构建 + 启动成功**；wx wheel ABI 缺 jpeg8/tiff5，已改用 Debian 原生 wx 4.2.1，待重跑 |
 | GitHub `ci` | ✅ 成功（commit 0653c89 / ee23b88） |
 | 认证/多租户 | 只有可选 API key；无用户/归属 |
 | 真实上机试缝 | **没有** |
