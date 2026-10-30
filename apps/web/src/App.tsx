@@ -51,6 +51,7 @@ export default function App() {
     doc,
     plan,
     selectedId,
+    selectedIds,
     hidden,
     showJumps,
     fitToken,
@@ -63,6 +64,7 @@ export default function App() {
     updateObject,
     updateStitch,
     setTranslate,
+    setTranslations,
     setPath,
     addRectangle,
     addLine,
@@ -232,17 +234,39 @@ export default function App() {
       }
       if (event.key.startsWith("Arrow") && state.selectedId && state.doc) {
         event.preventDefault();
-        const object = state.doc.layers
-          .flatMap((layer) => layer.objects)
-          .find((obj) => obj.id === state.selectedId);
-        if (!object) return;
         const step = event.shiftKey ? 10 : 1;
-        const [x, y] = object.translateMm ?? [0, 0];
-        const next: [number, number] = [
-          x + (event.key === "ArrowRight" ? step : event.key === "ArrowLeft" ? -step : 0),
-          y + (event.key === "ArrowDown" ? step : event.key === "ArrowUp" ? -step : 0),
-        ];
-        state.setTranslate(object.id, next, true);
+        const ids = state.selectedIds.length
+          ? state.selectedIds
+          : [state.selectedId];
+        const entries = ids
+          .map((id) => {
+            const object = state.doc?.layers
+              .flatMap((layer) => layer.objects)
+              .find((obj) => obj.id === id);
+            if (!object) return null;
+            const [x, y] = object.translateMm ?? [0, 0];
+            return {
+              id,
+              value: [
+                x +
+                  (event.key === "ArrowRight"
+                    ? step
+                    : event.key === "ArrowLeft"
+                      ? -step
+                      : 0),
+                y +
+                  (event.key === "ArrowDown"
+                    ? step
+                    : event.key === "ArrowUp"
+                      ? -step
+                      : 0),
+              ] as [number, number],
+            };
+          })
+          .filter((entry): entry is { id: string; value: [number, number] } =>
+            Boolean(entry),
+          );
+        state.setTranslations(entries, true);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -544,8 +568,8 @@ export default function App() {
                     <button
                       key={obj.id}
                       type="button"
-                      className={`object-row ${selectedId === obj.id ? "is-selected" : ""}`}
-                      onClick={() => select(obj.id)}
+                      className={`object-row ${selectedIds.includes(obj.id) ? "is-selected" : ""}`}
+                      onClick={(event) => select(obj.id, event.shiftKey)}
                     >
                       <span
                         className="swatch"
@@ -567,7 +591,10 @@ export default function App() {
 
           {selected ? (
             <section>
-              <h2>对象属性</h2>
+              <h2>
+                对象属性
+                {selectedIds.length > 1 ? ` · 已选 ${selectedIds.length}` : ""}
+              </h2>
               <div className="field">
                 <label htmlFor="color">颜色</label>
                 <input
@@ -660,7 +687,7 @@ export default function App() {
                   className="button"
                   onClick={duplicateSelected}
                 >
-                  复制对象
+                  复制选中
                 </button>
                 <button
                   type="button"
@@ -684,6 +711,11 @@ export default function App() {
                   {selectedCurve
                     ? "拖拽方块移动节点，圆形手柄调整曲线。"
                     : "该对象包含弧线或多子路径，暂不支持节点编辑。"}
+                </p>
+              ) : null}
+              {selectedIds.length > 1 ? (
+                <p className="hint">
+                  多选：属性只改主对象；Delete / Ctrl+D 作用于全部选中。
                 </p>
               ) : null}
             </section>
@@ -730,8 +762,8 @@ export default function App() {
               <span>显示打底（仅影响预览）</span>
             </label>
             <p className="hint">
-              滚轮缩放，拖拽空白平移，拖拽对象移动。快捷键：Ctrl+Z/Y 撤销重做，Delete 删除，
-              Ctrl+D 复制，方向键微移（Shift 10mm）。
+              滚轮缩放，拖拽空白平移，拖拽对象移动；Shift+点击多选，拖动任一选中对象整体移动。
+              快捷键：Ctrl+Z/Y 撤销重做，Delete 删除，Ctrl+D 复制，方向键微移（Shift 10mm）。
             </p>
           </section>
         </aside>
@@ -748,10 +780,11 @@ export default function App() {
             fitToken={fitToken}
             doc={doc}
             selectedId={selectedId}
+            selectedIds={selectedIds}
             nodeMode={nodeMode}
             drawMode={drawMode}
             onSelect={select}
-            onMove={setTranslate}
+            onMoveMany={setTranslations}
             onPath={setPath}
             onDraw={addFreehand}
           />

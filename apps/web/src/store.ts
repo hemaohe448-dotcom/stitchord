@@ -57,6 +57,7 @@ interface EditorState {
   doc: CompileDocument | null;
   plan: StitchPlan;
   selectedId: string | null;
+  selectedIds: string[];
   hidden: Record<string, boolean>;
   showJumps: boolean;
   fitToken: number;
@@ -67,10 +68,14 @@ interface EditorState {
   setPlan: (plan: StitchPlan) => void;
   setDoc: (doc: CompileDocument | null) => void;
   newSample: () => void;
-  select: (id: string | null) => void;
+  select: (id: string | null, additive?: boolean) => void;
   updateObject: (id: string, patch: Partial<CompileObject>) => void;
   updateStitch: (id: string, patch: Partial<CompileStitch>) => void;
   setTranslate: (id: string, value: [number, number], commit: boolean) => void;
+  setTranslations: (
+    entries: Array<{ id: string; value: [number, number] }>,
+    commit: boolean,
+  ) => void;
   setPath: (id: string, pathD: string, commit: boolean) => void;
   addRectangle: () => void;
   addLine: () => void;
@@ -109,6 +114,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   doc: loadSavedDoc() ?? initialDoc,
   plan: makeMockPlan(),
   selectedId: null,
+  selectedIds: [],
   hidden: {},
   showJumps: true,
   fitToken: 0,
@@ -122,6 +128,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     set({
       doc,
       selectedId: null,
+      selectedIds: [],
       past: [],
       future: [],
       dragBase: null,
@@ -132,13 +139,31 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     set({
       doc: buildSampleDocument("woven", "fill"),
       selectedId: null,
+      selectedIds: [],
       past: [],
       future: [],
       dragBase: null,
       fitToken: get().fitToken + 1,
     }),
 
-  select: (id) => set({ selectedId: id }),
+  select: (id, additive = false) =>
+    set((state) => {
+      if (!id) return { selectedId: null, selectedIds: [] };
+      if (!additive) return { selectedId: id, selectedIds: [id] };
+      const exists = state.selectedIds.includes(id);
+      const selectedIds = exists
+        ? state.selectedIds.filter((value) => value !== id)
+        : [...state.selectedIds, id];
+      return {
+        selectedIds,
+        selectedId:
+          selectedIds.length === 0
+            ? null
+            : exists
+              ? selectedIds[selectedIds.length - 1]
+              : id,
+      };
+    }),
 
   updateObject: (id, patch) => {
     const { doc, past } = get();
@@ -181,6 +206,24 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     set({ doc: next, past: [...past, base], future: [], dragBase: null });
   },
 
+  setTranslations: (entries, commit) => {
+    const { doc, dragBase, past } = get();
+    if (!doc) return;
+    let next = doc;
+    for (const entry of entries) {
+      next = mapObject(next, entry.id, (obj) => ({
+        ...obj,
+        translateMm: entry.value,
+      }));
+    }
+    if (!commit) {
+      set({ doc: next, dragBase: dragBase ?? doc });
+      return;
+    }
+    const base = dragBase ?? doc;
+    set({ doc: next, past: [...past, base], future: [], dragBase: null });
+  },
+
   addRectangle: () => {
     const { doc, past } = get();
     if (!doc) return;
@@ -189,7 +232,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       ...doc,
       layers: [...doc.layers, { id: layerId, name: "rect", objects: [obj] }],
     };
-    set({ doc: next, past: [...past, doc], future: [], selectedId: obj.id });
+    set({ doc: next, past: [...past, doc], future: [], selectedId: obj.id, selectedIds: [obj.id] });
   },
 
   addLine: () => {
@@ -210,7 +253,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         { id: `layer-line-${Date.now()}`, name: "line", objects: [obj] },
       ],
     };
-    set({ doc: next, past: [...past, doc], future: [], selectedId: obj.id });
+    set({ doc: next, past: [...past, doc], future: [], selectedId: obj.id, selectedIds: [obj.id] });
   },
 
   addFreehand: (points) => {
@@ -231,48 +274,60 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         { id: `layer-draw-${Date.now()}`, name: "freehand", objects: [obj] },
       ],
     };
-    set({ doc: next, past: [...past, doc], future: [], selectedId: id });
+    set({ doc: next, past: [...past, doc], future: [], selectedId: id, selectedIds: [id] });
   },
 
   duplicateSelected: () => {
-    const { doc, selectedId, past } = get();
-    if (!doc || !selectedId) return;
+    const { doc, selectedId, selectedIds, past } = get();
+    if (!doc) return;
+    const ids = new Set(
+      selectedIds.length ? selectedIds : selectedId ? [selectedId] : [],
+    );
+    if (!ids.size) return;
     const created: CompileObject[] = [];
+    let sequence = 0;
     const layers = doc.layers.map((layer) => {
-      const index = layer.objects.findIndex((obj) => obj.id === selectedId);
-      if (index < 0) return layer;
-      const source = layer.objects[index];
-      const copy: CompileObject = {
-        ...source,
-        id: `obj-copy-${Date.now()}`,
-        color: { ...source.color },
-        stitch: { ...source.stitch },
-        translateMm: source.translateMm
-          ? [source.translateMm[0] + 5, source.translateMm[1] + 5]
-          : [5, 5],
-      };
-      created.push(copy);
-      const objects = [...layer.objects];
-      objects.splice(index + 1, 0, copy);
+      const objects: CompileObject[] = [];
+      for (const source of layer.objects) {
+        objects.push(source);
+        if (!ids.has(source.id)) continue;
+        sequence += 1;
+        const copy: CompileObject = {
+          ...source,
+          id: `obj-copy-${Date.now()}-${sequence}`,
+          color: { ...source.color },
+          stitch: { ...source.stitch },
+          translateMm: source.translateMm
+            ? [source.translateMm[0] + 5, source.translateMm[1] + 5]
+            : [5, 5],
+        };
+        created.push(copy);
+        objects.push(copy);
+      }
       return { ...layer, objects };
     });
-    const copy = created[0];
-    if (!copy) return;
+    const last = created[created.length - 1];
+    if (!last) return;
     set({
       doc: { ...doc, layers },
       past: [...past, doc],
       future: [],
-      selectedId: copy.id,
+      selectedId: last.id,
+      selectedIds: created.map((copy) => copy.id),
     });
   },
 
   deleteSelected: () => {
-    const { doc, selectedId, past } = get();
-    if (!doc || !selectedId) return;
+    const { doc, selectedId, selectedIds, past } = get();
+    if (!doc) return;
+    const ids = new Set(
+      selectedIds.length ? selectedIds : selectedId ? [selectedId] : [],
+    );
+    if (!ids.size) return;
     const layers = doc.layers
       .map((layer) => ({
         ...layer,
-        objects: layer.objects.filter((obj) => obj.id !== selectedId),
+        objects: layer.objects.filter((obj) => !ids.has(obj.id)),
       }))
       .filter((layer) => layer.objects.length > 0);
     set({
@@ -280,6 +335,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       past: [...past, doc],
       future: [],
       selectedId: null,
+      selectedIds: [],
     });
   },
 
@@ -315,6 +371,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       past: [...past, doc],
       future: [],
       selectedId: null,
+      selectedIds: [],
     });
   },
 
@@ -333,6 +390,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       past: past.slice(0, -1),
       future: [doc, ...future],
       selectedId: null,
+      selectedIds: [],
     });
   },
 
@@ -345,6 +403,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       past: [...past, doc],
       future: future.slice(1),
       selectedId: null,
+      selectedIds: [],
     });
   },
 

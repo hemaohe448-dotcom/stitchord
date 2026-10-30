@@ -11,10 +11,14 @@ interface StitchCanvasProps {
   fitToken: number;
   doc: CompileDocument | null;
   selectedId: string | null;
+  selectedIds: string[];
   nodeMode: boolean;
   drawMode: boolean;
-  onSelect: (id: string | null) => void;
-  onMove: (id: string, value: [number, number], commit: boolean) => void;
+  onSelect: (id: string | null, additive?: boolean) => void;
+  onMoveMany: (
+    entries: Array<{ id: string; value: [number, number] }>,
+    commit: boolean,
+  ) => void;
   onPath: (id: string, pathD: string, commit: boolean) => void;
   onDraw: (points: Array<[number, number]>) => void;
 }
@@ -23,11 +27,11 @@ type DragState =
   | { mode: "pan"; x: number; y: number; tx: number; ty: number }
   | {
       mode: "object";
-      id: string;
+      ids: string[];
       startX: number;
       startY: number;
-      startTranslate: [number, number];
-      last: [number, number];
+      startTranslations: Record<string, [number, number]>;
+      lastEntries: Array<{ id: string; value: [number, number] }>;
       moved: boolean;
     }
   | {
@@ -94,10 +98,11 @@ export function StitchCanvas({
   fitToken,
   doc,
   selectedId,
+  selectedIds,
   nodeMode,
   drawMode,
   onSelect,
-  onMove,
+  onMoveMany,
   onPath,
   onDraw,
 }: StitchCanvasProps) {
@@ -253,22 +258,28 @@ export function StitchCanvas({
       ctx.fill();
     }
 
-    const selected = doc ? findObject(doc, selectedId) : null;
-    if (selected) {
-      const [dx, dy] = selected.translateMm ?? [0, 0];
-      ctx.save();
-      ctx.translate(
-        viewport.tx + dx * viewport.scale,
-        viewport.ty + dy * viewport.scale,
-      );
-      ctx.scale(viewport.scale, viewport.scale);
+    if (doc && selectedIds.length) {
       ctx.strokeStyle = "#f6ad55";
-      ctx.lineWidth = 1.5 / viewport.scale;
-      ctx.setLineDash([4 / viewport.scale, 3 / viewport.scale]);
-      ctx.stroke(new Path2D(selected.pathD));
-      ctx.restore();
+      ctx.lineWidth = 1.5;
+      for (const id of selectedIds) {
+        const object = findObject(doc, id);
+        if (!object) continue;
+        const [dx, dy] = object.translateMm ?? [0, 0];
+        ctx.save();
+        ctx.translate(
+          viewport.tx + dx * viewport.scale,
+          viewport.ty + dy * viewport.scale,
+        );
+        ctx.scale(viewport.scale, viewport.scale);
+        ctx.lineWidth = 1.5 / viewport.scale;
+        ctx.setLineDash([4 / viewport.scale, 3 / viewport.scale]);
+        ctx.stroke(new Path2D(object.pathD));
+        ctx.restore();
+      }
+      ctx.setLineDash([]);
 
-      if (nodeMode) {
+      const selected = findObject(doc, selectedId);
+      if (nodeMode && selected) {
         const curve = parseCurve(selected.pathD);
         if (curve) {
           const [dx, dy] = selected.translateMm ?? [0, 0];
@@ -316,7 +327,7 @@ export function StitchCanvas({
       ctx.stroke();
       ctx.setLineDash([]);
     }
-  }, [plan, hidden, showJumps, viewport, size, doc, selectedId, nodeMode, drawPoints]);
+  }, [plan, hidden, showJumps, viewport, size, doc, selectedId, selectedIds, nodeMode, drawPoints]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -405,15 +416,25 @@ export function StitchCanvas({
           }
           const hit = doc && ctx ? hitTest(doc, world, ctx) : null;
           if (hit) {
-            onSelect(hit.id);
-            const start = hit.translateMm ?? [0, 0];
+            if (event.shiftKey) {
+              onSelect(hit.id, true);
+              return;
+            }
+            const ids = selectedIds.includes(hit.id) ? selectedIds : [hit.id];
+            if (!selectedIds.includes(hit.id)) onSelect(hit.id, false);
+            const startTranslations: Record<string, [number, number]> = {};
+            for (const id of ids) {
+              const object = doc ? findObject(doc, id) : null;
+              const start = object?.translateMm ?? [0, 0];
+              startTranslations[id] = [start[0], start[1]];
+            }
             dragRef.current = {
               mode: "object",
-              id: hit.id,
+              ids,
               startX: world.x,
               startY: world.y,
-              startTranslate: [start[0], start[1]],
-              last: [start[0], start[1]],
+              startTranslations,
+              lastEntries: [],
               moved: false,
             };
           } else {
@@ -488,13 +509,19 @@ export function StitchCanvas({
             onPath(drag.id, pathD, false);
             return;
           }
-          const next: [number, number] = [
-            drag.startTranslate[0] + (world.x - drag.startX),
-            drag.startTranslate[1] + (world.y - drag.startY),
-          ];
-          drag.last = next;
+          const entries = drag.ids.map((id) => {
+            const start = drag.startTranslations[id] ?? [0, 0];
+            return {
+              id,
+              value: [
+                start[0] + (world.x - drag.startX),
+                start[1] + (world.y - drag.startY),
+              ] as [number, number],
+            };
+          });
+          drag.lastEntries = entries;
           drag.moved = true;
-          onMove(drag.id, next, false);
+          onMoveMany(entries, false);
         }}
         onPointerUp={() => {
           const drag = dragRef.current;
@@ -504,7 +531,7 @@ export function StitchCanvas({
           } else if (drag?.mode === "node") {
             onPath(drag.id, drag.lastPath, true);
           } else if (drag?.mode === "object" && drag.moved) {
-            onMove(drag.id, drag.last, true);
+            onMoveMany(drag.lastEntries, true);
           }
           dragRef.current = null;
         }}
