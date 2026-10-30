@@ -131,6 +131,7 @@ def vectorize(
     width_mm: float = Form(100.0),
     max_colors: int = Form(8),
     remove_background: bool = Form(True),
+    style: str = Form("flat"),
 ) -> dict:
     suffix = Path(file.filename or "").suffix.lower()
     if suffix not in ALLOWED_IMAGE_EXTENSIONS:
@@ -150,6 +151,7 @@ def vectorize(
             width_mm=width_mm,
             max_colors=max_colors,
             remove_background=remove_background,
+            style=style,
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc

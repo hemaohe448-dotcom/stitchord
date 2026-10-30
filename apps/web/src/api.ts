@@ -129,12 +129,14 @@ export async function vectorizeImage(
   widthMm = 100,
   maxColors = 8,
   removeBackground = true,
+  style: "flat" | "photo" = "flat",
 ): Promise<VectorizeResult> {
   const form = new FormData();
   form.append("file", file);
   form.append("width_mm", String(widthMm));
   form.append("max_colors", String(maxColors));
   form.append("remove_background", removeBackground ? "true" : "false");
+  form.append("style", style);
   const response = await fetch("/api/v1/vectorize", {
     method: "POST",
     body: form,

@@ -108,23 +108,53 @@ def _parse_svg(svg_path: Path, scale: float, remove_background: bool) -> dict[st
     return by_color
 
 
+def _strip_border_background(image, tolerance: int = 24):
+    """Flood-fill the connected border colour, then composite on white.
+
+    This removes solid-colour photo/scan backgrounds that are not white; the
+    later near-white filter handles the composited pixels.
+    """
+    from PIL import Image, ImageDraw
+
+    rgba = image.convert("RGBA")
+    width, height = rgba.size
+    for corner in (
+        (0, 0),
+        (width - 1, 0),
+        (0, height - 1),
+        (width - 1, height - 1),
+    ):
+        try:
+            ImageDraw.floodfill(rgba, corner, (0, 0, 0, 0), thresh=tolerance)
+        except (ValueError, TypeError):
+            continue
+    background = Image.new("RGBA", rgba.size, (255, 255, 255, 255))
+    return Image.alpha_composite(background, rgba).convert("RGB")
+
+
 def vectorize_image(
     data: bytes,
     width_mm: float = 100.0,
     max_colors: int = 8,
     remove_background: bool = True,
+    style: str = "flat",
 ) -> CompileDocument:
-    from PIL import Image
+    from PIL import Image, ImageDraw, ImageFilter
     import vtracer
 
     if width_mm <= 0:
         raise ValueError("widthMm must be positive")
     if not 2 <= max_colors <= 16:
         raise ValueError("maxColors must be between 2 and 16")
+    if style not in ("flat", "photo"):
+        raise ValueError("style must be 'flat' or 'photo'")
 
     image = Image.open(io.BytesIO(data)).convert("RGBA")
-    background = Image.new("RGBA", image.size, (255, 255, 255, 255))
-    image = Image.alpha_composite(background, image).convert("RGB")
+    if remove_background:
+        image = _strip_border_background(image)
+    else:
+        background = Image.new("RGBA", image.size, (255, 255, 255, 255))
+        image = Image.alpha_composite(background, image).convert("RGB")
 
     max_side = 1000
     if max(image.size) > max_side:
@@ -133,6 +163,10 @@ def vectorize_image(
             (max(1, round(image.width * ratio)), max(1, round(image.height * ratio))),
             Image.Resampling.LANCZOS,
         )
+
+    if style == "photo":
+        image = image.filter(ImageFilter.MedianFilter(3))
+        image = image.filter(ImageFilter.GaussianBlur(0.6))
 
     quantized = image.quantize(colors=max_colors, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE)
     image = quantized.convert("RGB")

@@ -30,6 +30,15 @@ def sample_png() -> bytes:
     return buffer.getvalue()
 
 
+def blue_background_png() -> bytes:
+    image = Image.new("RGB", (120, 80), "#1e3a8a")
+    draw = ImageDraw.Draw(image)
+    draw.rectangle((30, 25, 90, 55), fill="#c0392b")
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG")
+    return buffer.getvalue()
+
+
 def test_vectorize_returns_mm_document():
     document = vectorize_image(sample_png(), width_mm=100, max_colors=6)
     assert document.width_mm == 100
@@ -60,6 +69,32 @@ def test_vectorize_rejects_unknown_type():
         files={"file": ("sample.gif", b"GIF89a", "image/gif")},
     )
     assert response.status_code == 415
+
+
+def test_border_background_is_removed():
+    document = vectorize_image(
+        blue_background_png(), width_mm=100, max_colors=4, remove_background=True
+    )
+    colors = {layer.name for layer in document.layers}
+    assert colors
+    assert "#1e3a8a" not in colors
+
+
+def test_photo_style_returns_document():
+    document = vectorize_image(
+        sample_png(), width_mm=100, max_colors=6, remove_background=False, style="photo"
+    )
+    assert len(document.layers) >= 1
+    assert sum(len(layer.objects) for layer in document.layers) >= 1
+
+
+def test_invalid_style_rejected():
+    response = client.post(
+        "/v1/vectorize",
+        files={"file": ("sample.png", sample_png(), "image/png")},
+        data={"style": "sketch"},
+    )
+    assert response.status_code == 422
 
 
 @pytest.mark.skipif(

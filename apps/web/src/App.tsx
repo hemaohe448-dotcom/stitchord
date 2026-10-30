@@ -102,6 +102,7 @@ export default function App() {
   const [drawMode, setDrawMode] = useState(false);
   const [maxColors, setMaxColors] = useState(8);
   const [removeBackground, setRemoveBackground] = useState(true);
+  const [vectorStyle, setVectorStyle] = useState<"flat" | "photo">("flat");
   const [previewTopOnly, setPreviewTopOnly] = useState(false);
   const [hoop, setHoop] = useState("100x100");
   const [format, setFormat] = useState<ExportFormat>("dst");
@@ -194,6 +195,7 @@ export default function App() {
         100,
         maxColors,
         removeBackground,
+        vectorStyle,
       );
       setDoc(result.document);
       setNotice(
@@ -530,6 +532,19 @@ export default function App() {
                 />
                 <span>去白底</span>
               </label>
+            </div>
+            <div className="field">
+              <label htmlFor="vector-style">矢量化风格</label>
+              <select
+                id="vector-style"
+                value={vectorStyle}
+                onChange={(event) =>
+                  setVectorStyle(event.target.value as "flat" | "photo")
+                }
+              >
+                <option value="flat">扁平插画 / Logo</option>
+                <option value="photo">照片 / 渐变（实验）</option>
+              </select>
             </div>
             <div className="button-row">
               <button
