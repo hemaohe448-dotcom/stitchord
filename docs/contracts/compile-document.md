@@ -33,7 +33,8 @@
 2. 一个 object 产生一个颜色块；同色对象是否合并由 Ink/Stitch 决定。
 3. 图层顺序 = 缝制顺序；object 顺序同理。
 4. `widthMm`/`heightMm` 是画布尺寸；当前不校验是否超出 hoop（Phase 5）。
-5. Phase 1 支持 `type: "fill"` 与 `type: "running"`；`satin` 在参数映射完成后加入。
+5. Phase 1 支持 `fill` / `running` / `satin`；satin 要求 `pathD` 含两条轨线（两个子路径），
+   编译器输出 `inkstitch:satin_column="true"`。更复杂的 satin 参数（密度、拉布补偿、分段）待补。
 6. `angleDeg` / `rowSpacingMm` / `underlay` 输出为 `inkstitch:*` 属性；属性名与单位见
    `docs/contracts/inkstitch-params.md`。
 
@@ -66,6 +67,8 @@
 | 40×30 mm 填充，默认 row spacing（0.25 mm） | 1956 针 |
 | 同上，`rowSpacingMm: 0.5` | 1012 针（约一半，单位与属性名正确） |
 | 70 mm 折线，`type: running` | `Stroke` 元素 / 39 针 / bounds 10..50 × 50..80 mm |
+| 两条 40 mm 轨线，`type: satin` | `SatinColumn` 元素 / 210 针 / bounds 10..30 × 10..50 mm |
+| 同一双色文档导出 PES | 22,326 B / 2 色块 / 3495 针 / Brother 线色（`#d15400`,`#2584bb`） |
 
 ## 5. 待扩展
 

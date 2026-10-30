@@ -82,6 +82,15 @@ def test_compile_running_style():
     assert "fill:none;stroke:#c0392b;stroke-width:0.4" in svg
 
 
+def test_compile_satin_marks_column():
+    doc = sample_document()
+    doc.layers[0].objects[0].path_d = "M 10,10 L 10,50 M 30,10 L 30,50"
+    doc.layers[0].objects[0].stitch = CompileStitch(type="satin")
+    svg = compile_svg(doc)
+    assert 'inkstitch:satin_column="true"' in svg
+    assert "fill:none;stroke:#c0392b" in svg
+
+
 def test_compile_rejects_script_in_path():
     doc = sample_document()
     doc.layers[0].objects[0].path_d = 'M 0,0"/><script>alert(1)</script>'

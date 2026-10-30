@@ -19,8 +19,9 @@ Expected: 2 color blocks, ~419 stitches, deterministic DST hash across runs.
 ## Status
 
 - [x] Flat SVG (paths with fill) -> StitchPlan JSON + DST
-- [x] Deterministic output (cache disabled, fixed DST name not yet handled)
-- [ ] Satin / running / underlay parameters
-- [ ] PES and other formats
+- [x] Satin columns (two rails) and running strokes
+- [x] PES export (color matching to Brother catalog)
+- [x] Deterministic output (cache disabled; DST header name not yet fixed)
+- [ ] 12-case golden corpus + comparison against Inkscape reference
 - [ ] Docker image (not built; Docker unavailable on the current machine)
-- [ ] Golden corpus + comparison against Inkscape reference
+- [ ] 1-stitch delta between plan (3490) and DST readback (3489) explained

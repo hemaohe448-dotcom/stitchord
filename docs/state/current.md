@@ -26,6 +26,8 @@
   DST 读回 3489 针（1 针差异待解释）；
 - [x] **P1 参数与 running**：`row_spacing_mm` 实测生效（0.25→1956 针，0.5→1012 针）；
   `type: running` 生成 `Stroke`/39 针；参数映射表 `docs/contracts/inkstitch-params.md`；
+- [x] **P1 satin + PES**：双轨线 `satin` 生成 `SatinColumn`/210 针；同一文档导出 PES
+  （22,326 B / 2 色块 / Brother 线色匹配）；
 - [x] 发现并记录：wxPython 是 import 硬依赖、必须关闭磁盘缓存、plan(px) 与 DST(0.1mm/居中) 的差异。
 
 ## 进行中

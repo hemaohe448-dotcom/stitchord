@@ -21,7 +21,7 @@ _ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 
 
 class CompileStitch(ContractModel):
-    type: Literal["fill", "running"] = "fill"
+    type: Literal["fill", "running", "satin"] = "fill"
     angle_deg: float | None = Field(default=None, ge=-180, le=180)
     row_spacing_mm: float | None = Field(default=None, ge=0.1, le=2.0)
     underlay: bool | None = None
@@ -84,7 +84,7 @@ def compile_svg(doc: CompileDocument) -> str:
     for layer in doc.layers:
         parts.append(f'<g id="{layer.id}">')
         for obj in layer.objects:
-            if obj.stitch.type == "running":
+            if obj.stitch.type in ("running", "satin"):
                 style = (
                     f"fill:none;stroke:{obj.color.hex};"
                     f"stroke-width:{obj.stitch.running_width_mm:g}"
@@ -104,6 +104,8 @@ def compile_svg(doc: CompileDocument) -> str:
 def _stitch_attributes(stitch: CompileStitch) -> str:
     """Ink/Stitch namespaced params; names/units verified against source (P1)."""
     attributes: list[str] = []
+    if stitch.type == "satin":
+        attributes.append('inkstitch:satin_column="true"')
     if stitch.angle_deg is not None:
         attributes.append(f'inkstitch:angle="{stitch.angle_deg:g}"')
     if stitch.row_spacing_mm is not None:

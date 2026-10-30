@@ -70,6 +70,7 @@
   DST 读回 3489 针（1 针差异，待解释）；
 - 参数：`row_spacing_mm` 实测 0.25→1956 / 0.5→1012 针；`type: running` 生成 39 针；
   映射表 `docs/contracts/inkstitch-params.md`；
+- `type: satin`（双轨线）生成 `SatinColumn`/210 针；PES 导出 22,326 B，Brother 线色匹配；
 - 发现 wxPython 是 import 链硬依赖（tartan + sew_stack），最小惰性化补丁不可行；
 - 发现必须关闭 Ink/Stitch 磁盘缓存；plan 为 px，DST 为 0.1 mm 且居中。
 
