@@ -24,7 +24,7 @@ git -C .research\repos\inkex checkout FETCH_HEAD
 
 ```powershell
 $env:PYTHONPATH='D:\stitchord\.research\repos\inkex;D:\stitchord\.research\repos\inkstitch'
-D:\stitchord\.condaenv\python.exe tools\spike\inkstitch_headless_v2.py
+D:\stitchord\.condaenv\python.exe tools\spike\inkstitch_headless.py
 ```
 
 Outputs: `artifacts/p1/rect.dst`, `artifacts/p1/two_colors.dst`, `*.plan.json`.

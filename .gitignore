@@ -30,6 +30,13 @@ __pycache__/
 .condaenv/
 .pytest-tmp/
 
+# pip temp dirs (Windows sandbox leftovers)
+pip-install-*/
+pip-unpack-*/
+pip-metadata-*/
+pip-build-*/
+pip-ephem-wheel-cache-*/
+
 # local artifacts
 artifacts/
 tmp/

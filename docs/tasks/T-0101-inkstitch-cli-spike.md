@@ -63,6 +63,8 @@
 - 10 px 矩形：1 色块 / 48 针 / DST 662 B；
 - 两条彩色路径：2 色块 / 419 针 / DST 1781 B；
 - 连续两次运行 DST SHA-256 一致（确定性成立）；
+- 新增 `services/inkstitch_worker/worker.py`：扁平 SVG → plan JSON + DST，双色 fixture 通过
+  pydantic 契约校验，两次运行 SHA 一致；
 - 发现 wxPython 是 import 链硬依赖（tartan + sew_stack），最小惰性化补丁不可行；
 - 发现必须关闭 Ink/Stitch 磁盘缓存；plan 为 px，DST 为 0.1 mm 且居中。
 

@@ -15,7 +15,7 @@
 | pystitch | 1.0.1 |
 | pyembroidery | 1.5.1（仅用于读回验证） |
 
-复现脚本：`tools/spike/inkstitch_headless_v2.py`；依赖：`tools/spike/requirements-inkstitch.txt`。
+复现脚本：`tools/spike/inkstitch_headless.py`；依赖：`tools/spike/requirements-inkstitch.txt`。
 
 ## 2. 实测结果
 

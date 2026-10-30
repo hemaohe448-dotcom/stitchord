@@ -1,7 +1,8 @@
 """Probe: which Ink/Stitch modules truly require wx at import time.
 
-Run with PYTHONPATH pointing at inkex + inkstitch. Blocks wx imports to simulate
-a slim headless container.
+Run with PYTHONPATH pointing at inkex + inkstitch. On upstream Ink/Stitch this
+is expected to FAIL for `lib.elements` (tartan -> wx); it documents the coupling
+that made the "no-wx" idea unviable. Kept as evidence, not as a passing test.
 """
 
 import sys

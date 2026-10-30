@@ -19,11 +19,14 @@
   （`docs/reviews/2026-10-30-response.md`）；
 - [x] **P1 无头验证**：Ink/Stitch 库调用可在无 Inkscape 的进程内生成 StitchPlan + DST；
   10px 矩形 48 针、双色 419 针、输出确定；证据 `docs/research/inkstitch-headless.md`；
+- [x] **P1 worker 适配层**：`services/inkstitch_worker/worker.py` 输入扁平 SVG，输出
+  StitchPlan JSON + DST；双色 fixture 通过契约校验（pydantic）且两次运行 SHA 一致；
 - [x] 发现并记录：wxPython 是 import 硬依赖、必须关闭磁盘缓存、plan(px) 与 DST(0.1mm/居中) 的差异。
 
 ## 进行中
 
-- [ ] P1 worker 适配层：SVG/文档 → plan JSON + DST，参数映射，12 份黄金语料；
+- [ ] P1 worker 镜像（Linux + wx/GTK + 固定 commit）与 12 份黄金语料；
+- [ ] 参数映射（fill angle/row spacing/underlay/pull comp 等）与 satin/running；
 - [ ] 把评审修正提交（DST 12.1 mm、wx 依赖、GPL 措辞、契约测试口径）；
 - [ ] 用户确认：Roidery 是什么、GPL 商业边界、目标机型。
 
