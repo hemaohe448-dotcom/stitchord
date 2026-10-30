@@ -83,9 +83,24 @@ interface EditorState {
 }
 
 const initialDoc = buildSampleDocument("woven", "fill");
+const STORAGE_KEY = "stitchord.doc.v1";
+
+function loadSavedDoc(): CompileDocument | null {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as CompileDocument;
+    if (!parsed || !Array.isArray(parsed.layers) || !parsed.layers.length) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
 
 export const useEditorStore = create<EditorState>((set, get) => ({
-  doc: initialDoc,
+  doc: loadSavedDoc() ?? initialDoc,
   plan: makeMockPlan(),
   selectedId: null,
   hidden: {},
@@ -247,3 +262,17 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 }));
 
 export { cloneDocument };
+
+// Persist the editable document (not history/plan) so a refresh keeps the work.
+useEditorStore.subscribe((state, previous) => {
+  if (state.doc === previous.doc) return;
+  try {
+    if (state.doc) {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state.doc));
+    } else {
+      window.localStorage.removeItem(STORAGE_KEY);
+    }
+  } catch {
+    /* storage may be full or disabled; editing still works in memory */
+  }
+});
