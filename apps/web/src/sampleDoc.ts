@@ -13,6 +13,8 @@ export interface CompileObject {
   color: { hex: string; name?: string };
   stitch: CompileStitch;
   translateMm?: [number, number];
+  hidden?: boolean;
+  locked?: boolean;
 }
 
 export interface CompileLayer {

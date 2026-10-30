@@ -737,7 +737,7 @@ export default function App() {
                     <button
                       key={obj.id}
                       type="button"
-                      className={`object-row ${selectedIds.includes(obj.id) ? "is-selected" : ""}`}
+                      className={`object-row ${selectedIds.includes(obj.id) ? "is-selected" : ""} ${obj.hidden ? "is-hidden" : ""} ${obj.locked ? "is-locked" : ""}`}
                       onClick={(event) => select(obj.id, event.shiftKey)}
                     >
                       <span
@@ -747,7 +747,11 @@ export default function App() {
                       />
                       <span className="object-meta">
                         <strong>{obj.stitch.type}</strong>
-                        <span>{obj.id}</span>
+                        <span>
+                          {obj.id}
+                          {obj.hidden ? " · 隐藏" : ""}
+                          {obj.locked ? " · 锁定" : ""}
+                        </span>
                       </span>
                     </button>
                   ))}
@@ -764,6 +768,28 @@ export default function App() {
                 对象属性
                 {selectedIds.length > 1 ? ` · 已选 ${selectedIds.length}` : ""}
               </h2>
+              <div className="field-row">
+                <label className="toggle">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(selected.hidden)}
+                    onChange={(event) =>
+                      updateObject(selected.id, { hidden: event.target.checked })
+                    }
+                  />
+                  <span>隐藏（不生成针迹）</span>
+                </label>
+                <label className="toggle">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(selected.locked)}
+                    onChange={(event) =>
+                      updateObject(selected.id, { locked: event.target.checked })
+                    }
+                  />
+                  <span>锁定画布编辑</span>
+                </label>
+              </div>
               <div className="field">
                 <label htmlFor="color">颜色</label>
                 <input

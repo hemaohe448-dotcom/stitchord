@@ -63,6 +63,20 @@ test("imports a DST fixture", async ({ page }) => {
   await expect(page.getByText(/导入的文件不可编辑/)).toBeVisible();
 });
 
+test("hides and locks an object", async ({ page }) => {
+  await openApp(page);
+  await page.locator(".object-row").first().click();
+  const row = page.locator(".object-row").first();
+
+  await page.getByLabel("隐藏（不生成针迹）").check();
+  await expect(row).toHaveClass(/is-hidden/);
+  await page.getByLabel("隐藏（不生成针迹）").uncheck();
+  await expect(row).not.toHaveClass(/is-hidden/);
+
+  await page.getByLabel("锁定画布编辑").check();
+  await expect(row).toHaveClass(/is-locked/);
+});
+
 test("exports a DST", async ({ page }) => {
   await openApp(page);
   const button = page.getByRole("button", { name: "导出 DST" });

@@ -135,6 +135,14 @@ def test_hidden_layer_is_not_compiled():
     assert "#2980b9" in svg
 
 
+def test_hidden_object_is_not_compiled():
+    doc = sample_document()
+    doc.layers[0].objects[0].hidden = True
+    svg = compile_svg(doc)
+    assert "#c0392b" not in svg
+    assert "#2980b9" in svg
+
+
 def test_compile_emits_translate():
     doc = sample_document()
     doc.layers[0].objects[0].translate_mm = (5, -3)

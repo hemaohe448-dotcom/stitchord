@@ -40,6 +40,7 @@ class CompileObject(ContractModel):
     color: ThreadColor
     stitch: CompileStitch = CompileStitch()
     translate_mm: tuple[float, float] | None = None
+    hidden: bool = False
 
 
 class CompileLayer(ContractModel):
@@ -95,6 +96,8 @@ def compile_svg(doc: CompileDocument) -> str:
             continue
         parts.append(f'<g id="{layer.id}">')
         for obj in layer.objects:
+            if obj.hidden:
+                continue
             stitch = _resolve_stitch(obj.stitch, doc.fabric)
             if stitch.type in ("running", "satin"):
                 style = (

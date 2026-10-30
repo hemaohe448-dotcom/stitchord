@@ -13,7 +13,7 @@
 - [x] 多智能体协作/防幻觉/上下文规范；
 - [x] 前端骨架：DST/PES 导入 → StitchPlan → Canvas 渲染 → 导出 DST；
 - [x] 后端骨架：预览 / 校验 / 导出 API；
-- [x] 测试：前端 17 个单测 + 6 条 Playwright E2E，后端 74 个单测/契约测试（3.11 全量）；
+- [x] 测试：前端 17 个单测 + 7 条 Playwright E2E，后端 75 个单测/契约测试（3.11 全量）；
 - [x] 构建：`tsc --noEmit`、`vite build` 通过；
 - [x] Claude 独立架构评审（`docs/reviews/2026-10-30-architecture-review.md`），阻断项已处置
   （`docs/reviews/2026-10-30-response.md`）；
@@ -41,7 +41,7 @@
   删除、图层排序、撤销/重做、修改后 450ms 自动重编译；编辑结果可导出 DST；
 - [x] **P2 持久化**：工程文档写入 localStorage，刷新后恢复（历史/计划不持久化）；
 - [x] **P1 自引用黄金语料**：12 个文档用例 + 平移/确定性，覆盖 fill/running/satin、面料、
-  参数、三对象；3.11 全量 **74 passed**（尚缺 Inkscape 参考逐针对比）；
+  参数、三对象；3.11 全量 **75 passed**（尚缺 Inkscape 参考逐针对比）；
 - [x] **P3 基线矢量化**：`/v1/vectorize`（Pillow 量化 + VTracer + mm 缩放）→ CompileDocument；
   网页“图片矢量化”按钮；合成图 2 层/2 路径 → 2,956 针/DST 9,407 B；
   现已支持颜色数 2–16、去白底（边缘洪泛填充，兼容非白背景）、
@@ -76,8 +76,10 @@
   不改“文档→SVG→Ink/Stitch”主链路。
 - [x] **P2 针迹播放**：播放/暂停、进度条、慢/中/快、当前针高亮；仅前端，构建通过；
 - [x] **历史上限**：前端 undo 栈统一经 `pushHistory` 截到 100 步；前端 17 个单测。
-- [x] **Playwright 主流程**：6 条 E2E（加载/新增撤销/改参数/保存打开/DST 导入/导出）
-  全部通过，33.8s；证据 `apps/web/e2e/app.spec.ts`。
+- [x] **Playwright 主流程**：7 条 E2E（加载/新增撤销/改参数/保存打开/DST 导入/
+  对象隐藏锁定/导出）全部通过，30.7s；证据 `apps/web/e2e/app.spec.ts`；
+- [x] **对象级隐藏/锁定**：隐藏对象不参与编译，锁定对象不可在画布选中/拖动/节点编辑；
+  编译器有 hidden 回归测试。
 - [x] **ADR-0006 用户决策**：选 **A**——自研编辑器优先，Roidery 仅评估，不替换运行时。
 - [x] **ADR-0006 门槛通过（2026-10-30）**：CI 成功构建 `vectorcraft-cli`（15m 10s，
   DST 4,721 B）；仅证明可构建/最小导出，T-0202 静态评估中。

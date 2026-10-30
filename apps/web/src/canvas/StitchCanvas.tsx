@@ -68,6 +68,7 @@ function hitTest(
     const objects = layer.objects;
     for (let oi = objects.length - 1; oi >= 0; oi -= 1) {
       const obj = objects[oi];
+      if (obj.hidden || obj.locked) continue;
       const [dx, dy] = obj.translateMm ?? [0, 0];
       const local = { x: world.x - dx, y: world.y - dy };
       const path = new Path2D(obj.pathD);
@@ -292,7 +293,7 @@ export function StitchCanvas({
       ctx.setLineDash([]);
 
       const selected = findObject(doc, selectedId);
-      if (nodeMode && selected) {
+      if (nodeMode && selected && !selected.locked && !selected.hidden) {
         const curve = parseCurve(selected.pathD);
         if (curve) {
           const [dx, dy] = selected.translateMm ?? [0, 0];

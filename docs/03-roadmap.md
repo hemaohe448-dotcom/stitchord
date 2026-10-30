@@ -49,7 +49,7 @@
 **进展（2026-10-30）**：库调用路径已跑通（无 Inkscape、需 wxPython、输出确定），
 完成 CompileDocument(mm) → SVG(px) → plan/DST 端到端（2 色块/3490 针），
 fill/running/satin + PES，面料预设（woven/knit 实测差异），
-`/v1/digitize` 已接入 3.11 服务并在网页生成（74 tests），12 例自引用黄金语料。
+`/v1/digitize` 已接入 3.11 服务并在网页生成（75 tests），12 例自引用黄金语料。
 详见 `docs/research/inkstitch-headless.md`、`docs/contracts/compile-document.md`、
 `docs/reference/parameters.md`；剩余：Inkscape 参考对比、Linux 镜像、DST 边界针差异固定。
 
@@ -81,7 +81,7 @@ fill/running/satin + PES，面料预设（woven/knit 实测差异），
 
 **进展（2026-10-30）**：MVP 已可演示——图层/对象列表、画布拖拽、颜色/针法/行距/角度/坐标、
 删除、图层排序、撤销重做、自动重编译、localStorage 持久化、工程 JSON 保存/打开、
-复制对象与键盘快捷键、曲线/折线节点编辑、自由绘制走线、图层显隐/删除、
+复制对象与键盘快捷键、曲线/折线节点编辑、自由绘制走线、图层/对象显隐锁定、
 打底预览开关、多选与批量操作、SVG 导入、针迹播放预览、导出。
 **未实现**：锁定/合并/布尔、起收针/锁针、密度、局部重算。
 
@@ -108,7 +108,7 @@ DST 4,721 B）。仅证明可构建/最小导出；接入评估见 `docs/tasks/T
 - [ ] **P2-AC2** 100 步 undo/redo 后文档 hash 与初始一致；重做栈行为符合规范。
 - [ ] **P2-AC3** 10 万针文档：平移/缩放中位帧率 ≥ 50 FPS，输入延迟 P95 < 50 ms（Chrome，GTX 1050 Ti 级；记录机器编号与测量脚本路径）。
 - [ ] **P2-AC4** 修改单对象参数只重算该对象；其他色块针迹 hash 不变。
-- [x] **P2-AC5** Playwright 覆盖 6 条主流程（导入、建层、改参数、撤销、保存、导出）全部通过。
+- [x] **P2-AC5** Playwright 覆盖 7 条主流程（导入、建层、改参数、撤销、保存、对象隐藏/锁定、导出）全部通过。
 - [ ] **P2-AC6** 无阻塞性可访问性问题（键盘可达图层/参数；对比度 AA）。
 
 ---

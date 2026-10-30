@@ -310,6 +310,14 @@ button {
   background: #171b24;
 }
 
+.object-row.is-hidden {
+  opacity: 0.5;
+}
+
+.object-row.is-locked {
+  border-style: dashed;
+}
+
 .object-row.is-selected {
   border-color: var(--accent);
   background: #1d1a14;
