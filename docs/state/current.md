@@ -45,7 +45,8 @@
 
 - [ ] P1 worker 镜像（Linux + wx/GTK + 固定 commit）与 12 份黄金语料；
 - [ ] P1 收尾：解释 plan 3490 vs DST 3489 的 1 针差异；性能与错误输入；
-- [ ] ADR-0006 的 Phase 2 门槛：在 CI 构建 Roidery `vectorcraft-cli` 并跑 SVG→DST；
+- [ ] ADR-0006 的 Phase 2 门槛：在 CI 构建 Roidery `vectorcraft-cli` 并跑 SVG→DST
+  （workflow 已就绪，尚未在 GitHub 上运行）；
 - [ ] P2 编辑器补全：节点编辑、绘制工具、多选、复制粘贴、局部重算、持久化。
 
 ## 下一步（按优先级）

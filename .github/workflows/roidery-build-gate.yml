@@ -1,0 +1,62 @@
+name: roidery-build-gate
+
+# Phase 2 gate from ADR-0006: can we build Roidery's headless CLI from a pinned
+# commit and produce a DST? Manual + weekly; it is intentionally not on every push.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 1"
+
+jobs:
+  build-cli:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout Roidery (pinned)
+        uses: actions/checkout@v4
+        with:
+          repository: lork-fork/Roidery
+          ref: 0187f73daf2b5b05ff9e88cacc8c972c6abb9687
+          path: roidery
+
+      - name: Rust 1.95
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.95.0
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: roidery
+
+      - name: Build vectorcraft-cli
+        working-directory: roidery
+        run: cargo build --release -p vectorcraft-cli
+
+      - name: Smoke test SVG -> DST
+        working-directory: roidery
+        shell: pwsh
+        run: |
+          @'
+          <svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="100mm" viewBox="0 0 100 100">
+            <path d="M 10,10 L 50,10 L 50,40 L 10,40 Z" style="fill:#c0392b;stroke:none"/>
+          </svg>
+          '@ | Set-Content -Encoding utf8 smoke.svg
+
+          & .\target\release\vectorcraft-cli.exe run --in smoke.svg `
+            --cmd select.all `
+            --cmd stitch.export `
+            --params '{"path":"smoke.dst"}'
+
+          if (-not (Test-Path smoke.dst)) { throw "vectorcraft-cli produced no DST" }
+          $dst = Get-Item smoke.dst
+          if ($dst.Length -le 0) { throw "DST is empty" }
+          "DST bytes: $($dst.Length)"
+          Get-FileHash smoke.dst -Algorithm SHA256 | Format-List
+
+      - name: Upload smoke artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: roidery-smoke-dst
+          path: roidery/smoke.dst
+          if-no-files-found: error

@@ -34,6 +34,7 @@
    `vectorcraft-cli`，并跑一个 SVG→DST 的最小用例；
    - 通过：评估用 Roidery 的无头 CLI/MCP 作为服务端制版内核，或嵌入 `vectorcraft-web`；
    - 不通过：继续自研 Web 编辑器，Roidery 仅作 UX/参数参考。
+   执行入口：`.github/workflows/roidery-build-gate.yml`；任务单 `docs/tasks/T-0201-roidery-build-gate.md`。
 4. 不在本项目复制 Roidery 的 GPL 禁止内容；Roidery 本身是 clean-room，
    我们只使用其 MIT/Apache 代码/数值，并保留 NOTICE。
 
