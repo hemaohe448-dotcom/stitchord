@@ -53,6 +53,8 @@ export default function App() {
     duplicateSelected,
     deleteSelected,
     moveLayer,
+    toggleLayer,
+    deleteLayer,
     setFabric,
     undo,
     redo,
@@ -446,8 +448,19 @@ export default function App() {
             <h2>图层 / 对象</h2>
             {doc ? (
               doc.layers.map((layer, layerIndex) => (
-                <div className="layer-group" key={layer.id}>
+                <div
+                  className={`layer-group ${layer.visible === false ? "is-hidden" : ""}`}
+                  key={layer.id}
+                >
                   <div className="layer-head">
+                    <button
+                      type="button"
+                      className="icon-button"
+                      onClick={() => toggleLayer(layer.id)}
+                      title={layer.visible === false ? "显示图层" : "隐藏图层"}
+                    >
+                      {layer.visible === false ? "○" : "●"}
+                    </button>
                     <strong>{layer.name ?? layer.id}</strong>
                     <span className="layer-actions">
                       <button
@@ -465,6 +478,14 @@ export default function App() {
                         title="下移图层"
                       >
                         ↓
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteLayer(layer.id)}
+                        disabled={doc.layers.length <= 1}
+                        title="删除图层"
+                      >
+                        ×
                       </button>
                     </span>
                   </div>

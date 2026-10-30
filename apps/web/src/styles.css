@@ -250,6 +250,29 @@ button {
   color: var(--muted);
 }
 
+.layer-head strong {
+  flex: 1;
+  margin-left: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.layer-group.is-hidden {
+  opacity: 0.55;
+}
+
+.icon-button {
+  border: 1px solid var(--border);
+  background: transparent;
+  border-radius: 4px;
+  padding: 0 5px;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 16px;
+}
+
 .layer-actions {
   display: flex;
   gap: 2px;

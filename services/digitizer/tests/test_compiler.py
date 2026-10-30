@@ -127,6 +127,14 @@ def test_unknown_fabric_rejected():
         compile_svg(doc)
 
 
+def test_hidden_layer_is_not_compiled():
+    doc = sample_document()
+    doc.layers[0].visible = False
+    svg = compile_svg(doc)
+    assert "#c0392b" not in svg
+    assert "#2980b9" in svg
+
+
 def test_compile_emits_translate():
     doc = sample_document()
     doc.layers[0].objects[0].translate_mm = (5, -3)

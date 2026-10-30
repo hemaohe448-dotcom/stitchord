@@ -55,7 +55,9 @@ function hitTest(
   ctx: CanvasRenderingContext2D,
 ): CompileObject | null {
   for (let li = doc.layers.length - 1; li >= 0; li -= 1) {
-    const objects = doc.layers[li].objects;
+    const layer = doc.layers[li];
+    if (layer.visible === false) continue;
+    const objects = layer.objects;
     for (let oi = objects.length - 1; oi >= 0; oi -= 1) {
       const obj = objects[oi];
       const [dx, dy] = obj.translateMm ?? [0, 0];

@@ -49,7 +49,7 @@
 **进展（2026-10-30）**：库调用路径已跑通（无 Inkscape、需 wxPython、输出确定），
 完成 CompileDocument(mm) → SVG(px) → plan/DST 端到端（2 色块/3490 针），
 fill/running/satin + PES，面料预设（woven/knit 实测差异），
-`/v1/digitize` 已接入 3.11 服务并在网页生成（46 tests），12 例自引用黄金语料。
+`/v1/digitize` 已接入 3.11 服务并在网页生成（47 tests），12 例自引用黄金语料。
 详见 `docs/research/inkstitch-headless.md`、`docs/contracts/compile-document.md`、
 `docs/reference/parameters.md`；剩余：Inkscape 参考对比、Linux 镜像、DST 边界针差异固定。
 
@@ -81,7 +81,7 @@ fill/running/satin + PES，面料预设（woven/knit 实测差异），
 
 **进展（2026-10-30）**：MVP 已可演示——图层/对象列表、画布拖拽、颜色/针法/行距/角度/坐标、
 删除、图层排序、撤销重做、自动重编译、localStorage 持久化、工程 JSON 保存/打开、
-复制对象与键盘快捷键、折线节点编辑、自由绘制走线、导出。
+复制对象与键盘快捷键、折线节点编辑、自由绘制走线、图层显隐/删除、导出。
 剩余：曲线节点编辑、多选、局部重算。
 
 **目标**：制版师能在浏览器里完成“建层 → 画/导入形状 → 设绣法 → 调针 → 导出”。

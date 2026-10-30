@@ -45,6 +45,7 @@ class CompileObject(ContractModel):
 class CompileLayer(ContractModel):
     id: str
     name: str | None = None
+    visible: bool = True
     objects: list[CompileObject]
 
 
@@ -90,6 +91,8 @@ def compile_svg(doc: CompileDocument) -> str:
         f'<g transform="scale({scale})">',
     ]
     for layer in doc.layers:
+        if not layer.visible:
+            continue
         parts.append(f'<g id="{layer.id}">')
         for obj in layer.objects:
             stitch = _resolve_stitch(obj.stitch, doc.fabric)

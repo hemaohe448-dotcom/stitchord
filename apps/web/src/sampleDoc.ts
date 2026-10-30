@@ -16,6 +16,7 @@ export interface CompileObject {
 export interface CompileLayer {
   id: string;
   name?: string;
+  visible?: boolean;
   objects: CompileObject[];
 }
 

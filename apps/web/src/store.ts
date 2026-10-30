@@ -78,6 +78,8 @@ interface EditorState {
   duplicateSelected: () => void;
   deleteSelected: () => void;
   moveLayer: (layerId: string, delta: number) => void;
+  toggleLayer: (layerId: string) => void;
+  deleteLayer: (layerId: string) => void;
   setFabric: (fabric: string) => void;
   undo: () => void;
   redo: () => void;
@@ -290,6 +292,30 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const layers = [...doc.layers];
     [layers[index], layers[target]] = [layers[target], layers[index]];
     set({ doc: { ...doc, layers }, past: [...past, doc], future: [] });
+  },
+
+  toggleLayer: (layerId) => {
+    const { doc, past } = get();
+    if (!doc) return;
+    const target = doc.layers.find((layer) => layer.id === layerId);
+    if (!target) return;
+    const visibleCount = doc.layers.filter((layer) => layer.visible !== false).length;
+    if (target.visible !== false && visibleCount <= 1) return;
+    const layers = doc.layers.map((layer) =>
+      layer.id === layerId ? { ...layer, visible: layer.visible === false } : layer,
+    );
+    set({ doc: { ...doc, layers }, past: [...past, doc], future: [] });
+  },
+
+  deleteLayer: (layerId) => {
+    const { doc, past } = get();
+    if (!doc || doc.layers.length <= 1) return;
+    set({
+      doc: { ...doc, layers: doc.layers.filter((layer) => layer.id !== layerId) },
+      past: [...past, doc],
+      future: [],
+      selectedId: null,
+    });
   },
 
   setFabric: (fabric) => {
