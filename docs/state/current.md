@@ -13,7 +13,7 @@
 - [x] 多智能体协作/防幻觉/上下文规范；
 - [x] 前端骨架：DST/PES 导入 → StitchPlan → Canvas 渲染 → 导出 DST；
 - [x] 后端骨架：预览 / 校验 / 导出 API；
-- [x] 测试：前端 17 个单测 + 10 条 Playwright E2E，后端 82 个单测/契约测试（3.11 全量）；
+- [x] 测试：前端 17 个单测 + 10 条 Playwright E2E，后端 83 个单测/契约测试（3.11 全量）；
 - [x] 构建：`tsc --noEmit`、`vite build` 通过；
 - [x] Claude 独立架构评审（`docs/reviews/2026-10-30-architecture-review.md`），阻断项已处置
   （`docs/reviews/2026-10-30-response.md`）；
@@ -41,7 +41,7 @@
   删除、图层排序、撤销/重做、修改后 450ms 自动重编译；编辑结果可导出 DST；
 - [x] **P2 持久化**：工程文档写入 localStorage，刷新后恢复（历史/计划不持久化）；
 - [x] **P1 自引用黄金语料**：12 个文档用例 + 平移/确定性，覆盖 fill/running/satin、面料、
-  参数、三对象；3.11 全量 **82 passed**（尚缺 Inkscape 参考逐针对比）；
+  参数、三对象；3.11 全量 **83 passed**（尚缺 Inkscape 参考逐针对比）；
 - [x] **P3 基线矢量化**：`/v1/vectorize`（Pillow 量化 + VTracer + mm 缩放）→ CompileDocument；
   网页“图片矢量化”按钮；合成图 2 层/2 路径 → 2,956 针/DST 9,407 B；
   现已支持颜色数 2–16、去白底（边缘洪泛填充，兼容非白背景）、
@@ -99,8 +99,9 @@
   compose healthcheck 已改用 `/ready`。
 - [x] **上机规则扩展**：跳针过长、跳针比例过高、剪线过多、色块过多均给出 warning；
   不阻塞导出，交由制版师判断。
-- [x] **worker 镜像 CI 入口**：GitHub run `41084822203`：`Build image` ✅、`Run container` ✅、
-  `Smoke test` ❌（待诊断日志）；已增强 smoke 错误输出并上传 `worker-image-diagnostics` artifact。
+- [x] **worker 镜像 CI 入口**：GitHub run `41084822203/41086220477`：`Build image` ✅、
+  `Run container` ✅、应用 import ❌（`parents[3]` 在 `/app/app` 越界）；
+  已改为安全 repo root + 容器内 env 路径，新增 `test_path_layout.py`；待重跑。
 - [x] **GitHub ci**：commit `0653c89` 成功；Vitest 已排除 e2e。
 - [x] **ADR-0006 用户决策**：选 **A**——自研编辑器优先，Roidery 仅评估，不替换运行时。
 - [x] **ADR-0006 门槛通过（2026-10-30）**：CI 成功构建 `vectorcraft-cli`（15m 10s，

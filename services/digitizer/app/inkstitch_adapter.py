@@ -15,7 +15,14 @@ from pathlib import Path
 
 from . import cache
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+def _repo_root_for(path: Path) -> Path:
+    """Return the repo root, tolerating the shallow /app/app layout in Docker."""
+    parents = path.resolve().parents
+    return parents[3] if len(parents) > 3 else parents[-1]
+
+
+_ADAPTER_PATH = Path(__file__).resolve()
+_REPO_ROOT = _repo_root_for(_ADAPTER_PATH)
 _import_checked = False
 _import_ok = False
 

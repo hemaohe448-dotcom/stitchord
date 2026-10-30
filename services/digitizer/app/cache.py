@@ -5,11 +5,13 @@ from __future__ import annotations
 import hashlib
 import threading
 from collections import OrderedDict
+from typing import TYPE_CHECKING
 
-from .inkstitch_adapter import DigitizeResult
+if TYPE_CHECKING:
+    from .inkstitch_adapter import DigitizeResult
 
 _MAX_ENTRIES = 32
-_cache: OrderedDict[str, DigitizeResult] = OrderedDict()
+_cache: OrderedDict[str, object] = OrderedDict()
 _lock = threading.Lock()
 
 _MAX_GROUP_ENTRIES = 256
