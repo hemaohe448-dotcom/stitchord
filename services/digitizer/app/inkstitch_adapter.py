@@ -24,6 +24,7 @@ class DigitizeResult:
     dst: bytes
     sha256: str
     writer: str = "inkstitch"
+    cached: bool = False
 
 
 def _prepare_paths() -> None:

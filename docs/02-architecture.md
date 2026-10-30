@@ -232,7 +232,7 @@ upload
 | 文档 JSON | Postgres JSONB + 版本表 | 每次保存生成 revision |
 | 原图/导出/预览 | S3/MinIO | 租户前缀 + 生命周期策略 |
 | 任务 | Redis + Postgres | 队列用 Redis，状态落库 |
-| 缓存 | Redis | 编译结果按 hash 缓存 |
+| 缓存 | 进程内 LRU（32 项） | 文档 JSON + 格式为 key；Redis 为多副本目标态 |
 
 备份：Postgres 每日全量 + WAL；对象存储版本化；每季度恢复演练。
 

@@ -13,7 +13,7 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 
-from . import inkstitch_adapter
+from . import cache, inkstitch_adapter
 from .compiler import CompileDocument, compile_svg
 from .convert import read_stitch_plan, write_stitch_file
 from .models import (
@@ -215,6 +215,16 @@ def _digitize_document(document: CompileDocument, suffix: str = "dst"):
             status_code=503,
             detail="Ink/Stitch runtime unavailable; run this service on Python 3.11 with the pinned worker image",
         )
+    key = cache.key_for(document, suffix)
+    cached = cache.get(key)
+    if cached is not None:
+        return type(cached)(
+            plan=cached.plan,
+            dst=cached.dst,
+            sha256=cached.sha256,
+            writer=cached.writer,
+            cached=True,
+        )
     work_dir: Path | None = None
     try:
         svg = compile_svg(document)
@@ -222,9 +232,11 @@ def _digitize_document(document: CompileDocument, suffix: str = "dst"):
         svg_path = work_dir / "design.svg"
         svg_path.write_text(svg, encoding="utf-8")
         with _DIGITIZE_LOCK:
-            return inkstitch_adapter.digitize_svg(
+            result = inkstitch_adapter.digitize_svg(
                 svg_path, work_dir / f"design.{suffix}"
             )
+        cache.put(key, result)
+        return result
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     finally:
@@ -267,6 +279,7 @@ def digitize_export(
             "Content-Disposition": f'attachment; filename="stitchord.{format}"',
             "X-Stitch-Sha256": result.sha256,
             "X-Stitch-Format": format,
+            "X-Stitch-Cache": "hit" if result.cached else "miss",
         },
     )
 

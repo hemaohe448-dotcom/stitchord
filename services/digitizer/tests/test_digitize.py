@@ -4,7 +4,7 @@ import pytest
 import pyembroidery
 from fastapi.testclient import TestClient
 
-from app import inkstitch_adapter
+from app import cache, inkstitch_adapter
 from app.main import app
 
 client = TestClient(app)
@@ -128,6 +128,18 @@ def test_export_rejects_outside_hoop():
     detail = response.json()["detail"]
     assert detail["message"]
     assert any(issue["code"] == "OUTSIDE_HOOP" for issue in detail["issues"])
+
+
+@needs_inkstitch
+def test_export_cache_hit():
+    cache.clear()
+    first = client.post("/v1/digitize/export?format=dst", json=DOCUMENT)
+    second = client.post("/v1/digitize/export?format=dst", json=DOCUMENT)
+    assert first.status_code == 200, first.text
+    assert second.status_code == 200, second.text
+    assert first.headers["X-Stitch-Cache"] == "miss"
+    assert second.headers["X-Stitch-Cache"] == "hit"
+    assert first.content == second.content
 
 
 @needs_inkstitch

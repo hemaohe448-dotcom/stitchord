@@ -13,7 +13,7 @@
 - [x] 多智能体协作/防幻觉/上下文规范；
 - [x] 前端骨架：DST/PES 导入 → StitchPlan → Canvas 渲染 → 导出 DST；
 - [x] 后端骨架：预览 / 校验 / 导出 API；
-- [x] 测试：前端 15 个单测，后端 73 个单测/契约测试（3.11 全量）；
+- [x] 测试：前端 15 个单测，后端 74 个单测/契约测试（3.11 全量）；
 - [x] 构建：`tsc --noEmit`、`vite build` 通过；
 - [x] Claude 独立架构评审（`docs/reviews/2026-10-30-architecture-review.md`），阻断项已处置
   （`docs/reviews/2026-10-30-response.md`）；
@@ -41,7 +41,7 @@
   删除、图层排序、撤销/重做、修改后 450ms 自动重编译；编辑结果可导出 DST；
 - [x] **P2 持久化**：工程文档写入 localStorage，刷新后恢复（历史/计划不持久化）；
 - [x] **P1 自引用黄金语料**：12 个文档用例 + 平移/确定性，覆盖 fill/running/satin、面料、
-  参数、三对象；3.11 全量 **73 passed**（尚缺 Inkscape 参考逐针对比）；
+  参数、三对象；3.11 全量 **74 passed**（尚缺 Inkscape 参考逐针对比）；
 - [x] **P3 基线矢量化**：`/v1/vectorize`（Pillow 量化 + VTracer + mm 缩放）→ CompileDocument；
   网页“图片矢量化”按钮；合成图 2 层/2 路径 → 2,956 针/DST 9,407 B；
   现已支持颜色数 2–16、去白底（边缘洪泛填充，兼容非白背景）、
@@ -72,6 +72,8 @@
   `/v1/digitize/export` 也执行绣框校验（越框 422）；前端校验失败时 fail-closed；
 - [x] **请求安全**：可选 `X-API-Key`、每分钟限流、20 MB body cap、编译串行锁、
   SVG 拒绝 DTD/ENTITY/script、矢量化先缩图再处理；
+- [x] **结果缓存**：按文档 JSON + 格式做 32 项 LRU，导出返回 `X-Stitch-Cache: hit/miss`；
+  不改“文档→SVG→Ink/Stitch”主链路。
 - [x] **P2 针迹播放**：播放/暂停、进度条、慢/中/快、当前针高亮；仅前端，构建通过；
 - [x] **ADR-0006 门槛通过（2026-10-30）**：GitHub Actions 成功构建 `vectorcraft-cli`，
   15m 10s，导出 DST 4,721 B；**仅证明可构建/最小导出**，下一步 T-0202 集成评估。
