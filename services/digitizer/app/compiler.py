@@ -39,6 +39,7 @@ class CompileObject(ContractModel):
     path_d: str
     color: ThreadColor
     stitch: CompileStitch = CompileStitch()
+    translate_mm: tuple[float, float] | None = None
 
 
 class CompileLayer(ContractModel):
@@ -100,8 +101,12 @@ def compile_svg(doc: CompileDocument) -> str:
             else:
                 style = f"fill:{obj.color.hex};stroke:none"
             params = _stitch_attributes(stitch)
+            transform = ""
+            if obj.translate_mm is not None:
+                dx, dy = obj.translate_mm
+                transform = f' transform="translate({dx:g},{dy:g})"'
             parts.append(
-                f'<path id="{obj.id}" d="{obj.path_d}" style="{style}"{params}/>'
+                f'<path id="{obj.id}" d="{obj.path_d}" style="{style}"{transform}{params}/>'
             )
         parts.append("</g>")
     parts.append("</g>")

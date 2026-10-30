@@ -36,7 +36,9 @@
 - [x] **统一 3.11 服务**：`/v1/digitize` + `/v1/digitize/export` 接入 Ink/Stitch；
   本地 3.11 测试 26 passed；live API：knit 填充 1432 针、DST 4817 B、导出确定性；
   修掉 server 线程 `stop` 属性与 Ink/Stitch `check_stop_flag` 的冲突；
-- [x] **Web 生成面板**：面料/针法选择 → 调用 `/v1/digitize` → 画布更新；已构建并截图。
+- [x] **Web 生成面板**：面料/针法选择 → 调用 `/v1/digitize` → 画布更新；已构建并截图；
+- [x] **P2 编辑器 MVP**：图层/对象列表、选中、画布拖拽移动、颜色/针法/行距/角度/坐标编辑、
+  删除、图层排序、撤销/重做、修改后 450ms 自动重编译；编辑结果可导出 DST。
 - [x] 发现并记录：wxPython 是 import 硬依赖、必须关闭磁盘缓存、plan(px) 与 DST(0.1mm/居中) 的差异。
 
 ## 进行中
@@ -44,7 +46,7 @@
 - [ ] P1 worker 镜像（Linux + wx/GTK + 固定 commit）与 12 份黄金语料；
 - [ ] P1 收尾：解释 plan 3490 vs DST 3489 的 1 针差异；性能与错误输入；
 - [ ] ADR-0006 的 Phase 2 门槛：在 CI 构建 Roidery `vectorcraft-cli` 并跑 SVG→DST；
-- [ ] P2 编辑器：对象级选择/移动/参数面板、命令栈、局部重算。
+- [ ] P2 编辑器补全：节点编辑、绘制工具、多选、复制粘贴、局部重算、持久化。
 
 ## 下一步（按优先级）
 

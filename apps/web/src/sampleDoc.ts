@@ -10,6 +10,7 @@ export interface CompileObject {
   pathD: string;
   color: { hex: string; name?: string };
   stitch: CompileStitch;
+  translateMm?: [number, number];
 }
 
 export interface CompileLayer {

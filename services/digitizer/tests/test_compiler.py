@@ -127,6 +127,13 @@ def test_unknown_fabric_rejected():
         compile_svg(doc)
 
 
+def test_compile_emits_translate():
+    doc = sample_document()
+    doc.layers[0].objects[0].translate_mm = (5, -3)
+    svg = compile_svg(doc)
+    assert 'transform="translate(5,-3)"' in svg
+
+
 def test_compile_rejects_script_in_path():
     doc = sample_document()
     doc.layers[0].objects[0].path_d = 'M 0,0"/><script>alert(1)</script>'
