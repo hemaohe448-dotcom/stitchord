@@ -72,24 +72,25 @@
   `/v1/digitize/export` 也执行绣框校验（越框 422）；前端校验失败时 fail-closed；
 - [x] **请求安全**：可选 `X-API-Key`、每分钟限流、20 MB body cap、编译串行锁、
   SVG 拒绝 DTD/ENTITY/script、矢量化先缩图再处理；
-- [x] **针迹播放**：播放/暂停、进度条、慢/中/快、当前针高亮；仅前端，构建通过。
+- [x] **P2 针迹播放**：播放/暂停、进度条、慢/中/快、当前针高亮；仅前端，构建通过；
+- [x] **ADR-0006 门槛通过（2026-10-30）**：GitHub Actions 成功构建 `vectorcraft-cli`，
+  15m 10s，导出 DST 4,721 B；**仅证明可构建/最小导出**，下一步 T-0202 集成评估。
 - [x] 发现并记录：wxPython 是 import 硬依赖、必须关闭磁盘缓存、plan(px) 与 DST(0.1mm/居中) 的差异。
 
 ## 进行中
 
 - [ ] P1 worker 镜像（Dockerfile 已写，**未构建验证**）与 12 份黄金语料；
 - [ ] P1 收尾：Inkscape 参考逐针对比、DST 边界针差异固定测试、性能与错误输入；
-- [ ] ADR-0006 的 Phase 2 门槛：在 CI 构建 Roidery `vectorcraft-cli` 并跑 SVG→DST
-  （workflow 已就绪；等待按 `docs/07-github-actions-guide.md` 上传并手动触发）；
+- [ ] T-0202 Roidery 集成评估（CLI/MCP 输入、DST 读回、许可证、部署体积、跨平台）；
 - [ ] 生产硬化：认证/配额/请求体上限、SVG 实体防护、CI 去 skip、真实上机试缝；
 - [ ] P2 剩余：局部重算、100 步 undo 上限、Playwright 主流程。
 
 ## 下一步（按优先级）
 
-1. **Worker 镜像/CI**：在 GitHub Actions 构建 Dockerfile，跑 `/v1/digitize` 冒烟。
-2. **服务端硬化**：认证/限流、请求体上限、SVG 消毒与超时。
+1. **T-0202 Roidery 集成评估**：CLI/MCP 输入、DST 读回、许可证、部署体积、跨平台。
+2. **Worker 镜像/CI**：在 GitHub Actions 构建 Dockerfile，跑 `/v1/digitize` 冒烟。
 3. **P2/P3**：局部重算、ML 分割与质量基准。
-4. **Roidery 构建门槛**：按操作手册跑 GitHub Actions，回填 ADR-0006。
+4. **生产硬化**：认证/限流、请求体上限、SVG 消毒与超时。
 
 ## 阻塞 / 风险
 

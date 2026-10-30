@@ -1,8 +1,8 @@
 # ADR-0006：Roidery 的定位——先采用参数模型，编辑器内核设构建门槛
 
-- 状态：接受（带 Phase 2 门槛）
+- 状态：接受；Phase 2 构建门槛**已通过**（2026-10-30）
 - 日期：2026-10-30
-- 相关：ADR-0002、`docs/reference/parameters.md`
+- 相关：ADR-0002、`docs/reference/parameters.md`、`docs/reviews/roidery-build-result.md`
 
 ## 背景
 
@@ -38,11 +38,37 @@
 4. 不在本项目复制 Roidery 的 GPL 禁止内容；Roidery 本身是 clean-room，
    我们只使用其 MIT/Apache 代码/数值，并保留 NOTICE。
 
+## Phase 2 门槛结果（2026-10-30）
+
+| 项 | 结果 |
+| --- | --- |
+| GitHub Actions run | https://github.com/hemaohe448-dotcom/stitchord/actions/runs/41044768131/job/124026066868 |
+| 结论 | **成功** |
+| 总耗时 | 15m 10s |
+| 产物 | DST **4,721 bytes** |
+| 失败步骤/日志 | 无 |
+| DST SHA-256 | 回填中未提供 |
+
+判定：**仅证明“Windows CI 能构建 `vectorcraft-cli` 并导出非空 DST”**，不证明：
+
+- 与 Ink/Stitch 的针迹/色块/参数等价；
+- 性能、稳定性、并发安全；
+- GUI/编辑器可用性、许可证边界、可部署性。
+
+## 决策（门槛通过后）
+
+1. 当前运行时**继续用 Ink/Stitch**，不立即替换；现有 CompileDocument/StitchPlan/DST 契约保持；
+2. 启动 **T-0202 Roidery 集成评估**：验证无头 CLI/MCP 的输入格式、DST 读回、许可证 NOTICE、
+   部署体积与 Windows/Linux 可移植性，再决定“服务端内核”还是“编辑器内核”；
+3. 自研 Web 编辑器继续作为默认交付，Roidery 作为并行评估，不阻塞现有路线；
+4. 不把“构建成功”写成“生产可用”；真实功能/上机验证仍缺。
+
 ## 后果
 
 - 短期交付不被 Rust 构建阻塞；
 - 用户喜欢的交互方向被记录，并已用其参数预设改善输出；
-- 若构建门槛通过，架构可平滑切换到 Roidery 内核（编译器/契约仍是资产）；
+- Phase 2 门槛已通过，架构**可以**评估切换到 Roidery 内核（编译器/契约仍是资产），
+  但尚未做任何替换；
 - 需要明确告知用户：当前网页编辑器是自研，Roidery 的完整编辑体验尚未接入。
 
 ## 备选

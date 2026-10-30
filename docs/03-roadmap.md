@@ -85,6 +85,10 @@ fill/running/satin + PES，面料预设（woven/knit 实测差异），
 打底预览开关、多选与批量操作、SVG 导入、针迹播放预览、导出。
 **未实现**：锁定/合并/布尔、起收针/锁针、密度、100 步上限、Playwright、局部重算。
 
+**Roidery 门槛（2026-10-30）**：GitHub Actions 构建 `vectorcraft-cli` 成功（15m 10s，
+DST 4,721 B）。仅证明可构建/最小导出；接入评估见 `docs/tasks/T-0202-roidery-integration.md`，
+当前运行时与编辑器不变。
+
 **目标**：制版师能在浏览器里完成“建层 → 画/导入形状 → 设绣法 → 调针 → 导出”。
 
 **交付物**

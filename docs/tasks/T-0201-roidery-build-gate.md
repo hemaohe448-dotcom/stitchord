@@ -1,6 +1,6 @@
 # T-0201：Roidery 构建门槛（Phase 2）
 
-状态: todo
+状态: done
 负责人: CI（GitHub Actions）
 依赖: 无
 对应决策: ADR-0006
@@ -25,17 +25,25 @@
 
 ## 验收标准
 
-- [ ] AC1 `cargo build --release -p vectorcraft-cli` 成功（记录耗时、target 大小）；
-- [ ] AC2 `vectorcraft-cli run --in smoke.svg --cmd select.all --cmd stitch.export` 退出码 0；
-- [ ] AC3 产出 DST > 0 字节，SHA-256 记录在 workflow 日志/artifact；
-- [ ] AC4 失败时日志能定位到 crate/命令（不是“超时了”）；
-- [ ] AC5 结果写回 ADR-0006：通过 → 评估接入；不通过 → 自研编辑器继续。
+- [x] AC1 `cargo build --release -p vectorcraft-cli` 成功（记录耗时、target 大小）；
+- [x] AC2 `vectorcraft-cli run --in smoke.svg --cmd select.all --cmd stitch.export` 退出码 0；
+- [x] AC3 产出 DST > 0 字节（**4,721 bytes**；SHA-256 未在回填中提供）；
+- [x] AC4 失败时日志能定位到 crate/命令（本次成功，无失败日志）；
+- [x] AC5 结果写回 ADR-0006：通过 → 评估接入；不通过 → 自研编辑器继续。
 
 ## 证据
 
-- GitHub Actions run URL；
-- 构建耗时、artifact digest；
-- 失败时的完整错误摘要。
+- GitHub Actions run：
+  https://github.com/hemaohe448-dotcom/stitchord/actions/runs/41044768131/job/124026066868
+- 构建耗时：15m 10s；DST：4,721 bytes；结论：成功。
+- 回填表：`docs/reviews/roidery-build-result.md`
+- ADR：`docs/adr/0006-roidery-evaluation.md`
+
+## 结果
+
+门槛通过。仅证明 Windows CI 可构建 `vectorcraft-cli` 并导出非空 DST；
+未证明功能等价/性能/并发/许可证/部署。下一任务 T-0202 做集成评估，
+当前运行时仍为 Ink/Stitch，编辑器仍为自研。
 
 ## 风险
 
