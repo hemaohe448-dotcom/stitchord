@@ -58,15 +58,22 @@ test("edits stitch type and row spacing", async ({ page }) => {
 
 test("saves and reopens a project JSON", async ({ page }) => {
   await openApp(page);
+  await page.locator("#project-name").fill("E2E Order");
+  await page.locator("#project-name").press("Enter");
+  await expect(page.locator("#project-name")).toHaveValue("E2E Order");
+
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "保存工程" }).click();
   const download = await downloadPromise;
   const projectPath = path.join(test.info().outputDir, "project.json");
   await download.saveAs(projectPath);
+  const saved = JSON.parse(readFileSync(projectPath, "utf-8")) as { name?: string };
+  expect(saved.name).toBe("E2E Order");
 
   await page.locator('input[accept=".json"]').setInputFiles(projectPath);
   await expect(page.getByText(/已打开工程/)).toBeVisible();
   await expect(page.locator(".object-row")).toHaveCount(2);
+  await expect(page.locator("#project-name")).toHaveValue("E2E Order");
 });
 
 test("imports a DST fixture", async ({ page }) => {

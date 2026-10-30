@@ -32,6 +32,8 @@ export interface CompileDocument {
   widthMm: number;
   heightMm: number;
   fabric?: string;
+  name?: string;
+  notes?: string;
   layers: CompileLayer[];
 }
 

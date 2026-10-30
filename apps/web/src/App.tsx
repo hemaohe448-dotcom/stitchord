@@ -92,6 +92,7 @@ export default function App() {
     duplicateLayer,
     mergeLayerDown,
     renameLayer,
+    setProjectName,
     setFabric,
     undo,
     redo,
@@ -404,7 +405,7 @@ export default function App() {
       const fullPlan =
         previewTopOnly && doc ? await digitizeDocument(doc) : plan;
       const blob = await downloadWorksheet(fullPlan, {
-        projectName: "Stitchord Design",
+        projectName: doc?.name || "Stitchord Design",
         fabric: doc?.fabric ?? null,
         hoop,
       });
@@ -524,6 +525,21 @@ export default function App() {
 
           <section>
             <h2>工程</h2>
+            <div className="field">
+              <label htmlFor="project-name">工程名</label>
+              <input
+                key={doc?.name ?? ""}
+                id="project-name"
+                type="text"
+                defaultValue={doc?.name ?? ""}
+                placeholder="未命名工程"
+                maxLength={120}
+                onBlur={(event) => setProjectName(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") event.currentTarget.blur();
+                }}
+              />
+            </div>
             <div className="field">
               <label htmlFor="fabric">面料预设</label>
               <select

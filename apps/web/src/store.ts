@@ -91,6 +91,7 @@ interface EditorState {
   mergeLayerDown: (layerId: string) => void;
   renameLayer: (layerId: string, name: string) => void;
   setFabric: (fabric: string) => void;
+  setProjectName: (name: string) => void;
   undo: () => void;
   redo: () => void;
   toggleBlock: (id: string) => void;
@@ -449,6 +450,17 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       layer.id === layerId ? { ...layer, name: trimmed } : layer,
     );
     set({ doc: { ...doc, layers }, past: pushHistory(past, doc), future: [] });
+  },
+
+  setProjectName: (name) => {
+    const trimmed = name.trim().slice(0, 120);
+    const { doc, past } = get();
+    if (!doc || (doc.name ?? "") === trimmed) return;
+    set({
+      doc: { ...doc, name: trimmed || undefined },
+      past: pushHistory(past, doc),
+      future: [],
+    });
   },
 
   setFabric: (fabric) => {

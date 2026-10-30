@@ -10,6 +10,8 @@
   "widthMm": 100,
   "heightMm": 100,
   "fabric": "knit",
+  "name": "Order #A-1024",
+  "notes": "customer: demo",
   "layers": [
     {
       "id": "layer-red",
@@ -33,7 +35,8 @@
    禁止引号、尖括号，防止 SVG 注入。
 2. 一个 object 产生一个颜色块；同色对象是否合并由 Ink/Stitch 决定。
 3. 图层顺序 = 缝制顺序；object 顺序同理。
-4. `widthMm`/`heightMm` 是画布尺寸；当前不校验是否超出 hoop（Phase 5）。
+4. `name`/`notes` 是可选工程元数据（最长 120/1000 字符），编译器忽略，
+   工艺单与工程 JSON 会保留。
 5. Phase 1 支持 `fill` / `running` / `satin`；satin 要求 `pathD` 含两条轨线（两个子路径），
    编译器输出 `inkstitch:satin_column="true"`。更复杂的 satin 参数（密度、拉布补偿、分段）待补。
 6. `angleDeg` / `rowSpacingMm` / `underlay` / `pullCompensationMm` / `underlaySpacingMm` /
