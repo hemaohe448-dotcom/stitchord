@@ -101,8 +101,9 @@
   不阻塞导出，交由制版师判断。
 - [x] **worker 镜像 CI 入口**：应用已启动 `/health` ✅；`/ready` 503 连续暴露
   `libnotify.so.4`、`libXtst.so.6`、`libjpeg.so.8` 缺失。已改为 **Debian 原生
-  `python3-wxgtk4.0`（wx 4.2.1）+ venv system-site-packages**，不再使用 Ubuntu wheel；
-  待重跑验证。
+  `python3-wxgtk4.0`（4.2.0，bookworm）+ 显式 /usr/bin/python3.11 venv
+  system-site-packages**；构建时断言 `pip freeze` 无 wx，并实际 import
+  `lib.elements`/`lib.tartan.palette`；待重跑验证。
 - [x] **GitHub ci**：commit `0653c89` 成功；Vitest 已排除 e2e。
 - [x] **ADR-0006 用户决策**：选 **A**——自研编辑器优先，Roidery 仅评估，不替换运行时。
 - [x] **ADR-0006 门槛通过（2026-10-30）**：CI 成功构建 `vectorcraft-cli`（15m 10s，
