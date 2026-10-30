@@ -91,7 +91,8 @@
   未变对象复用、变更对象重算，plan 组装仍全量以保证与完整编译一致；
   测试：复用 2 个对象时 DST 字节相同；改红块后蓝块 stitches 逐项相同。ADR-0007；
 - [x] **服务端工程库（单租户）**：SQLite `/v1/projects` CRUD；网页“保存到服务器/项目库”；
-  从服务器打开后再保存走 PUT，不会重复新建；无认证/多租户；
+  从服务器打开后再保存走 PUT，不会重复新建；PUT 带 `expectedUpdatedAt`，
+  过期写返回 409，避免静默覆盖；无认证/多租户；
 - [x] **就绪探针**：`/ready` 检查 Ink/Stitch import；`/health` 仍只表示进程存活，
   compose healthcheck 已改用 `/ready`。
 - [x] **上机规则扩展**：跳针过长、跳针比例过高、剪线过多、色块过多均给出 warning；
