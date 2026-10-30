@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { StitchPlan } from "@stitchord/contracts";
-import { movePolylinePoint, parsePolyline, serializePolyline } from "../path";
+import { moveHandle, moveNode, parseCurve, serializeCurve } from "../curve";
 import type { CompileDocument, CompileObject } from "../sampleDoc";
 import { fitViewport, toScreen, toWorld, zoomAt, type Viewport } from "./transform";
 
@@ -34,6 +34,9 @@ type DragState =
       mode: "node";
       id: string;
       index: number;
+      kind: "anchor" | "in" | "out";
+      startX: number;
+      startY: number;
       translate: [number, number];
       startPath: string;
       lastPath: string;
@@ -266,19 +269,33 @@ export function StitchCanvas({
       ctx.restore();
 
       if (nodeMode) {
-        const polyline = parsePolyline(selected.pathD);
-        if (polyline) {
+        const curve = parseCurve(selected.pathD);
+        if (curve) {
           const [dx, dy] = selected.translateMm ?? [0, 0];
-          ctx.fillStyle = "#f6ad55";
-          ctx.strokeStyle = "#1a1206";
+          const toScreenPoint = (x: number, y: number) => ({
+            x: (x + dx) * viewport.scale + viewport.tx,
+            y: (y + dy) * viewport.scale + viewport.ty,
+          });
           ctx.lineWidth = 1;
-          for (const [x, y] of polyline.points) {
-            const screenX =
-              (x + dx) * viewport.scale + viewport.tx;
-            const screenY =
-              (y + dy) * viewport.scale + viewport.ty;
+          for (const node of curve.nodes) {
+            const anchor = toScreenPoint(node.x, node.y);
+            for (const handle of [node.in, node.out]) {
+              if (!handle) continue;
+              const point = toScreenPoint(handle[0], handle[1]);
+              ctx.strokeStyle = "#f6ad55";
+              ctx.beginPath();
+              ctx.moveTo(anchor.x, anchor.y);
+              ctx.lineTo(point.x, point.y);
+              ctx.stroke();
+              ctx.fillStyle = "#fbd38d";
+              ctx.beginPath();
+              ctx.arc(point.x, point.y, 3.5, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            ctx.fillStyle = "#f6ad55";
+            ctx.strokeStyle = "#1a1206";
             ctx.beginPath();
-            ctx.rect(screenX - 4, screenY - 4, 8, 8);
+            ctx.rect(anchor.x - 4, anchor.y - 4, 8, 8);
             ctx.fill();
             ctx.stroke();
           }
@@ -340,27 +357,49 @@ export function StitchCanvas({
           const ctx = canvas.getContext("2d");
           const selectedObject = doc ? findObject(doc, selectedId) : null;
           if (nodeMode && selectedObject && ctx) {
-            const polyline = parsePolyline(selectedObject.pathD);
-            if (polyline) {
+            const curve = parseCurve(selectedObject.pathD);
+            if (curve) {
               const [dx, dy] = selectedObject.translateMm ?? [0, 0];
               const screenX = event.clientX - rect.left;
               const screenY = event.clientY - rect.top;
-              for (let index = 0; index < polyline.points.length; index += 1) {
-                const [x, y] = polyline.points[index];
-                const px = (x + dx) * viewport.scale + viewport.tx;
-                const py = (y + dy) * viewport.scale + viewport.ty;
+              let target:
+                | { index: number; kind: "anchor" | "in" | "out" }
+                | null = null;
+              for (let index = 0; index < curve.nodes.length && !target; index += 1) {
+                const node = curve.nodes[index];
+                const px = (node.x + dx) * viewport.scale + viewport.tx;
+                const py = (node.y + dy) * viewport.scale + viewport.ty;
                 if (Math.hypot(px - screenX, py - screenY) <= 9) {
-                  dragRef.current = {
-                    mode: "node",
-                    id: selectedObject.id,
-                    index,
-                    translate: [dx, dy],
-                    startPath: selectedObject.pathD,
-                    lastPath: selectedObject.pathD,
-                  };
-                  event.currentTarget.setPointerCapture(event.pointerId);
-                  return;
+                  target = { index, kind: "anchor" };
                 }
+              }
+              for (let index = 0; index < curve.nodes.length && !target; index += 1) {
+                const node = curve.nodes[index];
+                for (const kind of ["in", "out"] as const) {
+                  const handle = node[kind];
+                  if (!handle) continue;
+                  const px = (handle[0] + dx) * viewport.scale + viewport.tx;
+                  const py = (handle[1] + dy) * viewport.scale + viewport.ty;
+                  if (Math.hypot(px - screenX, py - screenY) <= 8) {
+                    target = { index, kind };
+                    break;
+                  }
+                }
+              }
+              if (target) {
+                dragRef.current = {
+                  mode: "node",
+                  id: selectedObject.id,
+                  index: target.index,
+                  kind: target.kind,
+                  startX: world.x,
+                  startY: world.y,
+                  translate: [dx, dy],
+                  startPath: selectedObject.pathD,
+                  lastPath: selectedObject.pathD,
+                };
+                event.currentTarget.setPointerCapture(event.pointerId);
+                return;
               }
             }
           }
@@ -427,18 +466,26 @@ export function StitchCanvas({
             viewport,
           );
           if (drag.mode === "node") {
-            const polyline = parsePolyline(drag.startPath);
-            if (!polyline) return;
-            const next = serializePolyline(
-              movePolylinePoint(
-                polyline,
-                drag.index,
-                world.x - drag.translate[0],
-                world.y - drag.translate[1],
-              ),
-            );
-            drag.lastPath = next;
-            onPath(drag.id, next, false);
+            const curve = parseCurve(drag.startPath);
+            if (!curve) return;
+            const next =
+              drag.kind === "anchor"
+                ? moveNode(
+                    curve,
+                    drag.index,
+                    world.x - drag.startX,
+                    world.y - drag.startY,
+                  )
+                : moveHandle(
+                    curve,
+                    drag.index,
+                    drag.kind,
+                    world.x - drag.translate[0],
+                    world.y - drag.translate[1],
+                  );
+            const pathD = serializeCurve(next);
+            drag.lastPath = pathD;
+            onPath(drag.id, pathD, false);
             return;
           }
           const next: [number, number] = [

@@ -10,7 +10,7 @@ import {
   vectorizeImage,
 } from "./api";
 import { StitchCanvas } from "./canvas/StitchCanvas";
-import { parsePolyline } from "./path";
+import { parseCurve } from "./curve";
 import { FABRICS } from "./sampleDoc";
 import type { CompileDocument, CompileObject } from "./sampleDoc";
 import { useEditorStore } from "./store";
@@ -74,7 +74,7 @@ export default function App() {
   const selected = doc
     ? allObjects(doc.layers).find((obj) => obj.id === selectedId)
     : undefined;
-  const selectedPolyline = selected ? parsePolyline(selected.pathD) : null;
+  const selectedCurve = selected ? parseCurve(selected.pathD) : null;
 
   useEffect(() => {
     if (!doc) return;
@@ -630,9 +630,9 @@ export default function App() {
               </div>
               {nodeMode ? (
                 <p className="hint">
-                  {selectedPolyline
-                    ? "拖拽方块移动节点；曲线/多子路径对象暂不支持。"
-                    : "该对象含曲线或多子路径，暂不支持节点编辑。"}
+                  {selectedCurve
+                    ? "拖拽方块移动节点，圆形手柄调整曲线。"
+                    : "该对象包含弧线或多子路径，暂不支持节点编辑。"}
                 </p>
               ) : null}
             </section>
