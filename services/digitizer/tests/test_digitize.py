@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+import pyembroidery
 from fastapi.testclient import TestClient
 
 from app import inkstitch_adapter
@@ -70,6 +71,22 @@ def test_digitize_export_is_deterministic():
     assert second.status_code == 200, second.text
     assert first.content == second.content
     assert len(first.content) > 1000
+
+
+@needs_inkstitch
+def test_plan_stitch_count_close_to_dst(tmp_path):
+    plan_response = client.post("/v1/digitize", json=DOCUMENT)
+    export_response = client.post("/v1/digitize/export", json=DOCUMENT)
+    assert plan_response.status_code == 200
+    assert export_response.status_code == 200
+
+    dst_path = tmp_path / "out.dst"
+    dst_path.write_bytes(export_response.content)
+    pattern = pyembroidery.read(str(dst_path))
+    dst_stitches = sum(1 for stitch in pattern.stitches if stitch[2] == 0)
+    # DST writers insert/merge boundary stitches at colour changes; allow <=3.
+    difference = abs(plan_response.json()["stats"]["stitchCount"] - dst_stitches)
+    assert difference <= 3, difference
 
 
 @needs_inkstitch

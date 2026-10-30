@@ -1,11 +1,18 @@
-﻿"""Compare a StitchPlan JSON (mm, document coords) with a DST readback (0.1 mm, centered)."""
+"""Compare a StitchPlan JSON (mm, document coords) with a DST readback (0.1 mm, centered)."""
 
 from __future__ import annotations
 
 import json
+import math
 import sys
 
 import pyembroidery
+
+TOL = 0.17  # DST quantizes to 0.1 mm; allow one unit plus rounding
+
+
+def close(a: tuple[float, float], b: tuple[float, float]) -> bool:
+    return math.hypot(a[0] - b[0], a[1] - b[1]) <= TOL
 
 
 def main(plan_path: str, dst_path: str) -> int:
@@ -13,34 +20,43 @@ def main(plan_path: str, dst_path: str) -> int:
         plan = json.load(handle)
     pattern = pyembroidery.read(dst_path)
 
-    px = [s for block in plan["colorBlocks"] for s in block["stitches"] if s["command"] == "STITCH"]
-    dst_all = [(x / 10.0, y / 10.0, c) for x, y, c in pattern.stitches]
-    dst = [(x, y) for x, y, c in dst_all if c == 0]
+    px = [
+        s
+        for block in plan["colorBlocks"]
+        for s in block["stitches"]
+        if s["command"] == "STITCH"
+    ]
+    dst = [(x / 10.0, y / 10.0) for x, y, c in pattern.stitches if c == 0]
     print("plan stitches", len(px), "dst stitches", len(dst))
 
-    # DST is centered on the design bbox; align plan bbox center to 0.
     cx = (plan["bounds"]["minX"] + plan["bounds"]["maxX"]) / 2
     cy = (plan["bounds"]["minY"] + plan["bounds"]["maxY"]) / 2
-    aligned = [(round((s["x"] - cx) * 10) / 10, round((s["y"] - cy) * 10) / 10) for s in px]
-    dst_rounded = [(round(x * 10) / 10, round(y * 10) / 10) for x, y in dst]
+    aligned = [(s["x"] - cx, s["y"] - cy) for s in px]
 
-    # Find the first divergence with a simple one-stitch lookahead.
     i = j = 0
-    while i < len(aligned) and j < len(dst_rounded):
-        if aligned[i] == dst_rounded[j]:
+    extras: list[tuple[int, tuple[float, float]]] = []
+    missing: list[tuple[int, tuple[float, float]]] = []
+    while i < len(aligned) and j < len(dst):
+        if close(aligned[i], dst[j]):
             i += 1
             j += 1
             continue
-        print("diverge at plan", i, aligned[i], "dst", j, dst_rounded[j])
-        print("plan window", aligned[max(0, i - 2): i + 4])
-        print("dst  window", dst_rounded[max(0, j - 2): j + 4])
+        if i + 1 < len(aligned) and close(aligned[i + 1], dst[j]):
+            extras.append((i, aligned[i]))
+            i += 1
+            continue
+        if j + 1 < len(dst) and close(aligned[i], dst[j + 1]):
+            missing.append((j, dst[j]))
+            j += 1
+            continue
+        print("unresolved at plan", i, aligned[i], "dst", j, dst[j])
         return 1
-    print("prefix matched; remaining plan", len(aligned) - i, "dst", len(dst_rounded) - j)
-    print("plan tail", aligned[-3:])
-    print("dst tail", dst_rounded[-3:])
+
+    print("plan-only stitches:", len(extras), extras[:5])
+    print("dst-only stitches:", len(missing), missing[:5])
+    print("tail plan", len(aligned) - i, "tail dst", len(dst) - j)
     return 0
 
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1], sys.argv[2]))
-
