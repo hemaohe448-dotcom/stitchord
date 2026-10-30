@@ -854,6 +854,101 @@ export default function App() {
                   </div>
                 </>
               ) : null}
+              {selected.stitch.type === "running" ? (
+                <>
+                  <div className="field">
+                    <label htmlFor="stitch-length">针距 mm</label>
+                    <input
+                      id="stitch-length"
+                      type="number"
+                      step="0.5"
+                      min="0.5"
+                      max="12"
+                      value={selected.stitch.maxStitchLengthMm ?? ""}
+                      placeholder="面料默认"
+                      onChange={(event) =>
+                        updateStitch(selected.id, {
+                          maxStitchLengthMm: event.target.value
+                            ? Number(event.target.value)
+                            : undefined,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="running-width">线宽 mm</label>
+                    <input
+                      id="running-width"
+                      type="number"
+                      step="0.1"
+                      min="0.1"
+                      max="2"
+                      value={selected.stitch.runningWidthMm ?? 0.4}
+                      onChange={(event) =>
+                        updateStitch(selected.id, {
+                          runningWidthMm: Number(event.target.value),
+                        })
+                      }
+                    />
+                  </div>
+                </>
+              ) : null}
+              {selected.stitch.type === "satin" ? (
+                <>
+                  <div className="field">
+                    <label htmlFor="satin-density">缎面密度 mm</label>
+                    <input
+                      id="satin-density"
+                      type="number"
+                      step="0.05"
+                      min="0.2"
+                      max="1.5"
+                      value={selected.stitch.satinDensityMm ?? ""}
+                      placeholder="面料默认"
+                      onChange={(event) =>
+                        updateStitch(selected.id, {
+                          satinDensityMm: event.target.value
+                            ? Number(event.target.value)
+                            : undefined,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="pull-comp">拉布补偿 mm</label>
+                    <input
+                      id="pull-comp"
+                      type="number"
+                      step="0.05"
+                      min="0"
+                      max="2"
+                      value={selected.stitch.pull_compensation_mm ?? ""}
+                      placeholder="面料默认"
+                      onChange={(event) =>
+                        updateStitch(selected.id, {
+                          pull_compensation_mm: event.target.value
+                            ? Number(event.target.value)
+                            : undefined,
+                        })
+                      }
+                    />
+                  </div>
+                </>
+              ) : null}
+              {selected.stitch.type !== "running" ? (
+                <label className="toggle">
+                  <input
+                    type="checkbox"
+                    checked={selected.stitch.underlay !== false}
+                    onChange={(event) =>
+                      updateStitch(selected.id, {
+                        underlay: event.target.checked,
+                      })
+                    }
+                  />
+                  <span>打底</span>
+                </label>
+              ) : null}
               <div className="field-row">
                 <div className="field">
                   <label htmlFor="tx">X mm</label>

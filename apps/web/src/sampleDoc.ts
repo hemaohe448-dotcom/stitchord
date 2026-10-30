@@ -5,6 +5,9 @@ export interface CompileStitch {
   underlay?: boolean;
   satin_heavy_underlay?: boolean;
   pull_compensation_mm?: number;
+  maxStitchLengthMm?: number;
+  runningWidthMm?: number;
+  satinDensityMm?: number;
 }
 
 export interface CompileObject {
