@@ -45,7 +45,8 @@
 - [x] **P3 基线矢量化**：`/v1/vectorize`（Pillow 量化 + VTracer + mm 缩放）→ CompileDocument；
   网页“图片矢量化”按钮；合成图 2 层/2 路径 → 2,956 针/DST 9,407 B；
   现已支持颜色数 2–16、去白底（边缘洪泛填充，兼容非白背景）、
-  扁平/照片两种风格（照片模式=中值+轻微模糊+CIELAB k-means，实验性）；
+  扁平/照片两种风格（照片模式=中值+轻微模糊+CIELAB k-means，实验性）、
+  细节三档（filter_speckle 2/4/12、layer_difference 8/16/28）；
   证据 `docs/research/vectorization-baseline.md`；
 - [x] **P2 项目 IO/快捷键**：工程 JSON 保存/打开、复制对象、Ctrl+Z/Y/D、Delete、方向键微移；
   与 localStorage 自动保存互补；

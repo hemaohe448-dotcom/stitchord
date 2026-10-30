@@ -8,7 +8,6 @@ baseline that ML segmentation can later improve.
 from __future__ import annotations
 
 import io
-import math
 import re
 import tempfile
 import xml.etree.ElementTree as ET
@@ -225,16 +224,22 @@ def vectorize_image(
     max_colors: int = 8,
     remove_background: bool = True,
     style: str = "flat",
+    filter_speckle: int = 4,
+    layer_difference: int = 16,
 ) -> CompileDocument:
     from PIL import Image, ImageDraw, ImageFilter
     import vtracer
 
-    if not math.isfinite(width_mm) or not 1 <= width_mm <= 1000:
+    if width_mm != width_mm or not 1 <= width_mm <= 1000:
         raise ValueError("widthMm must be between 1 and 1000")
     if not 2 <= max_colors <= 16:
         raise ValueError("maxColors must be between 2 and 16")
     if style not in ("flat", "photo"):
         raise ValueError("style must be 'flat' or 'photo'")
+    if not 0 <= filter_speckle <= 64:
+        raise ValueError("filterSpeckle must be between 0 and 64")
+    if not 1 <= layer_difference <= 64:
+        raise ValueError("layerDifference must be between 1 and 64")
 
     Image.MAX_IMAGE_PIXELS = 50_000_000
     image = Image.open(io.BytesIO(data)).convert("RGBA")
@@ -280,9 +285,9 @@ def vectorize_image(
             colormode="color",
             hierarchical="stacked",
             mode="spline",
-            filter_speckle=4,
+            filter_speckle=filter_speckle,
             color_precision=6,
-            layer_difference=16,
+            layer_difference=layer_difference,
         )
         by_color = _parse_svg(svg_path, scale, remove_background)
     finally:

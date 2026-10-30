@@ -193,6 +193,8 @@ export async function vectorizeImage(
   maxColors = 8,
   removeBackground = true,
   style: "flat" | "photo" = "flat",
+  filterSpeckle = 4,
+  layerDifference = 16,
 ): Promise<VectorizeResult> {
   const form = new FormData();
   form.append("file", file);
@@ -200,6 +202,8 @@ export async function vectorizeImage(
   form.append("max_colors", String(maxColors));
   form.append("remove_background", removeBackground ? "true" : "false");
   form.append("style", style);
+  form.append("filter_speckle", String(filterSpeckle));
+  form.append("layer_difference", String(layerDifference));
   const response = await fetch("/api/v1/vectorize", {
     method: "POST",
     body: form,

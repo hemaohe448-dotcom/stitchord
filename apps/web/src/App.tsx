@@ -113,6 +113,9 @@ export default function App() {
   const [maxColors, setMaxColors] = useState(8);
   const [removeBackground, setRemoveBackground] = useState(true);
   const [vectorStyle, setVectorStyle] = useState<"flat" | "photo">("flat");
+  const [vectorDetail, setVectorDetail] = useState<"high" | "medium" | "low">(
+    "medium",
+  );
   const [previewTopOnly, setPreviewTopOnly] = useState(false);
   const [hoop, setHoop] = useState("100x100");
   const [format, setFormat] = useState<ExportFormat>("dst");
@@ -304,12 +307,20 @@ export default function App() {
     setBusy(true);
     setError(null);
     try {
+      const detail =
+        vectorDetail === "high"
+          ? { speckle: 2, difference: 8 }
+          : vectorDetail === "low"
+            ? { speckle: 12, difference: 28 }
+            : { speckle: 4, difference: 16 };
       const result = await vectorizeImage(
         file,
         100,
         maxColors,
         removeBackground,
         vectorStyle,
+        detail.speckle,
+        detail.difference,
       );
       setDoc(result.document);
       setNotice(
@@ -712,6 +723,20 @@ export default function App() {
                 />
                 <span>去白底</span>
               </label>
+            </div>
+            <div className="field">
+              <label htmlFor="vector-detail">矢量化细节</label>
+              <select
+                id="vector-detail"
+                value={vectorDetail}
+                onChange={(event) =>
+                  setVectorDetail(event.target.value as "high" | "medium" | "low")
+                }
+              >
+                <option value="high">高（保留小细节）</option>
+                <option value="medium">中</option>
+                <option value="low">低（更适合刺绣）</option>
+              </select>
             </div>
             <div className="field">
               <label htmlFor="vector-style">矢量化风格</label>

@@ -234,6 +234,8 @@ def vectorize(
     max_colors: int = Form(8),
     remove_background: bool = Form(True),
     style: str = Form("flat"),
+    filter_speckle: int = Form(4),
+    layer_difference: int = Form(16),
 ) -> dict:
     suffix = Path(file.filename or "").suffix.lower()
     if suffix not in ALLOWED_IMAGE_EXTENSIONS:
@@ -254,6 +256,8 @@ def vectorize(
             max_colors=max_colors,
             remove_background=remove_background,
             style=style,
+            filter_speckle=filter_speckle,
+            layer_difference=layer_difference,
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc

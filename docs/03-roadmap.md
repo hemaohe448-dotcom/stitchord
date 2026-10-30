@@ -122,7 +122,7 @@ DST 4,721 B）。仅证明可构建/最小导出；接入评估见 `docs/tasks/T
 **进展（2026-10-30）**：确定性基线已跑通——Pillow 量化 + VTracer + 路径缩放 → CompileDocument
 → Ink/Stitch；合成图 2 层/2 路径 → 2,956 针/DST 9,407 B；网页“图片矢量化”可用，
 支持颜色数 2–16、去白底（边缘洪泛，兼容非白背景）、扁平/照片风格
-（照片模式=中值+轻模糊+CIELAB k-means，实验性）。
+（照片模式=中值+轻模糊+CIELAB k-means，实验性）、细节三档（speckle/层差）。
 未做：30 张基准集、ML 分割、绣法自动分类、质量指标。详见 `docs/research/vectorization-baseline.md`。
 
 **目标**：上传一张插画，90 秒内得到“可编辑、可上机”的初稿，而不是一堆碎路径。
