@@ -36,7 +36,7 @@ WORKDIR /app
 COPY requirements-inkstitch.txt /tmp/requirements-inkstitch.txt
 RUN grep -vi '^wxpython' /tmp/requirements-inkstitch.txt > /tmp/requirements.txt \
     && pip install --no-cache-dir -r /tmp/requirements.txt \
-    && ! pip freeze | grep -qi '^wxpython' \
+    && test -z "$(find /opt/venv/lib/python3.11/site-packages -maxdepth 1 -iname 'wx*' -print -quit)" \
     && python -c "import wx; print('wx', wx.version())"
 
 COPY pyproject.toml ./
