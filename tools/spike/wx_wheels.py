@@ -17,4 +17,4 @@ for version in ("24.04", "22.04", "20.04"):
     wheels = re.findall(r'href="([^"]+\.whl)"', text)
     matches = [name for name in wheels if "cp311" in name]
     print(version, "cp311", matches[-5:])
-    print(version, "4.3.2", [name for name in matches if "4.3.2" in name][-3:])
+    print(version, "cp312-4.2.5", [name for name in wheels if "cp312" in name and "4.2.5" in name])
