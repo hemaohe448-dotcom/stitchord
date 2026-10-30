@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import shutil
 import tempfile
+import threading
 from pathlib import Path
 from typing import Literal
 
@@ -22,6 +23,7 @@ from .models import (
     ValidationReport,
     WorksheetRequest,
 )
+from .security import guard
 from .svg_import import import_svg
 from .validation import validate_plan, validate_with_hoop
 from .vectorize import vectorize_image
@@ -29,6 +31,7 @@ from .worksheet import build_worksheet
 
 MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 ALLOWED_EXTENSIONS = {".dst", ".pes", ".exp", ".jef", ".vp3", ".xxx"}
+_DIGITIZE_LOCK = threading.Lock()
 
 app = FastAPI(title="Stitchord Digitizer", version="0.1.0")
 
@@ -42,6 +45,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def request_guard(request, call_next):
+    rejection = await guard(request)
+    if rejection is not None:
+        return rejection
+    return await call_next(request)
 
 
 @app.get("/health")
@@ -210,9 +221,10 @@ def _digitize_document(document: CompileDocument, suffix: str = "dst"):
         work_dir = Path(tempfile.mkdtemp(prefix="stitchord-digitize-"))
         svg_path = work_dir / "design.svg"
         svg_path.write_text(svg, encoding="utf-8")
-        return inkstitch_adapter.digitize_svg(
-            svg_path, work_dir / f"design.{suffix}"
-        )
+        with _DIGITIZE_LOCK:
+            return inkstitch_adapter.digitize_svg(
+                svg_path, work_dir / f"design.{suffix}"
+            )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     finally:

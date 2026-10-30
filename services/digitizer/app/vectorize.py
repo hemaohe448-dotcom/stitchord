@@ -8,6 +8,7 @@ baseline that ML segmentation can later improve.
 from __future__ import annotations
 
 import io
+import math
 import re
 import tempfile
 import xml.etree.ElementTree as ET
@@ -142,14 +143,17 @@ def vectorize_image(
     from PIL import Image, ImageDraw, ImageFilter
     import vtracer
 
-    if width_mm <= 0:
-        raise ValueError("widthMm must be positive")
+    if not math.isfinite(width_mm) or not 1 <= width_mm <= 1000:
+        raise ValueError("widthMm must be between 1 and 1000")
     if not 2 <= max_colors <= 16:
         raise ValueError("maxColors must be between 2 and 16")
     if style not in ("flat", "photo"):
         raise ValueError("style must be 'flat' or 'photo'")
 
+    Image.MAX_IMAGE_PIXELS = 50_000_000
     image = Image.open(io.BytesIO(data)).convert("RGBA")
+    if max(image.size) > 2000:
+        image.thumbnail((2000, 2000), Image.Resampling.LANCZOS)
     if remove_background:
         image = _strip_border_background(image)
     else:

@@ -12,13 +12,17 @@ from .vectorize import _hex, _transform_path
 def import_svg(data: bytes, width_mm: float = 100.0) -> CompileDocument:
     from svgelements import Path, Shape, SVG
 
-    if width_mm <= 0:
-        raise ValueError("widthMm must be positive")
+    if width_mm != width_mm or not 1 <= width_mm <= 1000:
+        raise ValueError("widthMm must be between 1 and 1000")
 
     try:
         text = data.decode("utf-8")
     except UnicodeDecodeError as exc:
         raise ValueError("SVG must be UTF-8") from exc
+
+    lowered = text.lower()
+    if "<!doctype" in lowered or "<!entity" in lowered or "<script" in lowered:
+        raise ValueError("SVG contains a DTD/entity/script and is rejected")
 
     try:
         svg = SVG.parse(io.StringIO(text))
@@ -39,8 +43,11 @@ def import_svg(data: bytes, width_mm: float = 100.0) -> CompileDocument:
     scale = width_mm / base_w
     height_mm = base_h * scale
     by_color: dict[str, list[str]] = {}
-
+    element_count = 0
     for element in svg.elements():
+        element_count += 1
+        if element_count > 5000:
+            raise ValueError("SVG has too many elements")
         if not isinstance(element, Shape):
             continue
         fill = str(element.fill) if element.fill is not None else "none"

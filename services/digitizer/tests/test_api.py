@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 from app.convert import write_stitch_file
 from app.main import app
 from app.models import StitchPlan
+from app.security import reset_rate_limiter
 
 from .test_convert import sample_plan
 
@@ -76,6 +77,31 @@ def test_worksheet_pdf():
     assert response.headers["content-type"] == "application/pdf"
     assert response.content.startswith(b"%PDF")
     assert len(response.content) > 2000
+
+
+def test_api_key_guard(monkeypatch):
+    plan = sample_plan().model_dump(by_alias=True)
+    monkeypatch.setenv("STITCHORD_API_KEY", "secret")
+    denied = client.post("/v1/stitch/validate", json=plan)
+    assert denied.status_code == 401
+    allowed = client.post(
+        "/v1/stitch/validate",
+        json=plan,
+        headers={"X-API-Key": "secret"},
+    )
+    assert allowed.status_code == 200
+    assert client.get("/health").status_code == 200
+
+
+def test_rate_limit(monkeypatch):
+    plan = sample_plan().model_dump(by_alias=True)
+    monkeypatch.setenv("STITCHORD_RATE_LIMIT", "1")
+    reset_rate_limiter()
+    try:
+        assert client.post("/v1/stitch/validate", json=plan).status_code == 200
+        assert client.post("/v1/stitch/validate", json=plan).status_code == 429
+    finally:
+        reset_rate_limiter()
 
 
 def test_export_and_read_back():

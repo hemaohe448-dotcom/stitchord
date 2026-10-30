@@ -70,3 +70,16 @@ def test_import_svg_rejects_other_type():
         files={"file": ("art.png", b"not svg", "image/png")},
     )
     assert response.status_code == 415
+
+
+def test_import_svg_rejects_doctype_entity_and_script():
+    payloads = [
+        b'<!DOCTYPE svg [<!ENTITY x "boom">]><svg xmlns="http://www.w3.org/2000/svg"/>',
+        b'<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>',
+    ]
+    for payload in payloads:
+        response = client.post(
+            "/v1/import/svg",
+            files={"file": ("bad.svg", payload, "image/svg+xml")},
+        )
+        assert response.status_code == 422, response.text

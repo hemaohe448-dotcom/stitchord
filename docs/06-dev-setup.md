@@ -116,13 +116,21 @@ docker compose -f infra/docker-compose.yml up --build
 Phase 1 的 digitizer 镜像会包含固定 commit 的 Ink/Stitch；镜像 digest 记录到
 `docs/versions.lock.md`。
 
+**注意（2026-10-30）**：Dockerfile 已写（固定 Ink/Stitch/inkex + GTK/wx），但本机无 Docker，
+**尚未构建验证**；首次构建请记录输出，失败时先修 Dockerfile，不要把“镜像可用”当成事实。
+
 ## 7. 环境变量
 
 | 变量 | 默认 | 用途 |
 | --- | --- | --- |
 | `STITCHORD_WORK_DIR` | 系统临时目录 | 服务端导出临时文件目录 |
 | `STITCHORD_CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | CORS 白名单 |
-| `STITCHORD_MAX_UPLOAD` | 25 MB（代码常量） | 上传限制 |
+| `STITCHORD_API_KEY` | 空（不鉴权） | 设置后 `/v1/*` 需 `X-API-Key` |
+| `STITCHORD_RATE_LIMIT` | 0（关闭） | 每客户端每分钟请求数上限 |
+| `STITCHORD_MAX_UPLOAD` | 15 MB（代码常量） | 图片/SVG 上传限制 |
+
+**公网部署必须设置 `STITCHORD_API_KEY` 与 `STITCHORD_RATE_LIMIT`**；当前限流是单进程内存版，
+多副本部署需要 Redis/网关限流。
 
 ## 8. 已知问题
 
@@ -130,3 +138,4 @@ Phase 1 的 digitizer 镜像会包含固定 commit 的 Ink/Stitch；镜像 diges
 2. Python 3.14 + 系统临时目录：pytest/pip 会 `PermissionError`；用完全权限或 CI。
 3. 代理的 MITM 证书会让 curl(schannel) 报 `SEC_E_NO_CREDENTIALS`；用 git(openssl)/npm/Node，不要用 curl 直连。
 4. `D:\stitchord\.research\repos\` 是只读研究克隆，已 gitignore，不进入项目源码。
+5. 本机无 Docker，worker 镜像尚未构建；CI 在无 Ink/Stitch 时会跳过 digitize/golden 用例。
