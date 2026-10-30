@@ -36,7 +36,8 @@
           └──────────────────┘ └──────────────────┘ └──────────────────┘
 ```
 
-Phase 0 只实现：浏览器针迹查看器 + digitizer 的 DST 读取/导出/校验；Ink/Stitch、队列、数据库在后续阶段接入。
+Phase 1 已实现：浏览器针迹查看/生成 + digitizer 的 DST 读取/导出/校验 + 文档→SVG→StitchPlan/DST
+（`/v1/digitize`，需 Python 3.11 + Ink/Stitch）；队列、数据库、多租户在后续阶段接入。
 
 ## 3. 仓库结构
 
@@ -165,7 +166,7 @@ pyembroidery 只用于导入、round-trip 验证与独立回归，不作为第�
 - 命令栈：所有修改走 command，支持 100 步 undo/redo；
 - 重新生成：只重算受影响对象；生成中显示 stale 标记，不阻塞编辑。
 
-## 7. API（Phase 0 已实现 + 规划）
+## 7. API（Phase 1 已实现 + 规划）
 
 | 方法 | 路径 | 状态 | 说明 |
 | --- | --- | --- | --- |
@@ -173,12 +174,13 @@ pyembroidery 只用于导入、round-trip 验证与独立回归，不作为第�
 | POST | `/v1/stitch/preview` | ✅ | 上传 DST/PES/… → StitchPlan |
 | POST | `/v1/stitch/validate` | ✅ | 静态规则校验 |
 | POST | `/v1/stitch/export` | ✅ | StitchPlan → DST/EXP/… |
+| POST | `/v1/digitize` | ✅ P1 | CompileDocument → StitchPlan（Ink/Stitch） |
+| POST | `/v1/digitize/export` | ✅ P1 | CompileDocument → DST 字节（确定性） |
 | POST | `/v1/projects` | P4 | 创建工程 |
 | GET/PUT | `/v1/projects/{id}` | P4 | 读取/保存文档 |
 | POST | `/v1/assets` | P4 | 上传原图，返回签名 URL |
 | POST | `/v1/vectorize` | P3 | 创建矢量化任务 |
-| POST | `/v1/digitize` | P1 | 文档 → 针迹计划 |
-| GET | `/v1/jobs/{id}` | P1 | 任务状态 / 进度 / 错误 |
+| GET | `/v1/jobs/{id}` | P4 | 任务状态 / 进度 / 错误 |
 | POST | `/v1/exports` | P5 | 导出并写入对象存储 |
 
 约定：

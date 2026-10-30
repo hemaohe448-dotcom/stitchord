@@ -12,6 +12,7 @@ build/
 __pycache__/
 *.py[cod]
 .pytest_cache/
+pytest-of-*/
 *.egg-info/
 
 # env & secrets

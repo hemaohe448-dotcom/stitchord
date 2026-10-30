@@ -41,6 +41,7 @@ uvicorn app.main:app --reload --port 8000
 ```
 
 Windows PowerShell 下可参考 [`docs/06-dev-setup.md`](docs/06-dev-setup.md)。
+生成针迹（`/v1/digitize`）需要 Python 3.11 + Ink/Stitch，启动方式见该文档 5.1。
 
 ## 文档
 

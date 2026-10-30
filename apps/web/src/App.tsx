@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
 import type { ChangeEvent, DragEvent } from "react";
 import type { StitchPlan } from "@stitchord/contracts";
-import { downloadBlob, exportStitch, previewStitch } from "./api";
+import { downloadBlob, digitizeDocument, exportStitch, previewStitch } from "./api";
 import { StitchCanvas } from "./canvas/StitchCanvas";
+import { buildSampleDocument, FABRICS } from "./sampleDoc";
 import { useEditorStore } from "./store";
 
 const number = new Intl.NumberFormat("zh-CN");
@@ -26,8 +27,29 @@ export default function App() {
   } = useEditorStore();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [fabric, setFabric] = useState<string>("woven");
+  const [stitchType, setStitchType] = useState<"fill" | "running">("fill");
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState("示例花样 · 尚未导入文件");
+  const [notice, setNotice] = useState("示例花样 · 选择面料后点击“生成针迹”");
+
+  async function onGenerate() {
+    setGenerating(true);
+    setError(null);
+    try {
+      const plan = await digitizeDocument(buildSampleDocument(fabric, stitchType));
+      setPlan(plan);
+      const fabricLabel =
+        FABRICS.find((item) => item.id === fabric)?.label ?? fabric;
+      setNotice(
+        `示例工程 · ${fabricLabel} · ${stitchType} · ${plan.stats.stitchCount.toLocaleString()} 针`,
+      );
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setGenerating(false);
+    }
+  }
 
   async function handleFile(file: File) {
     setBusy(true);
@@ -76,7 +98,7 @@ export default function App() {
           <span className="brand-mark" aria-hidden="true" />
           <div>
             <strong>Stitchord</strong>
-            <span className="brand-sub">绣花制版 · Phase 0</span>
+            <span className="brand-sub">绣花制版 · Phase 1</span>
           </div>
         </div>
         <div className="topbar-actions">
@@ -128,6 +150,48 @@ export default function App() {
               hidden
             />
             <p className="hint">{notice}</p>
+          </section>
+
+          <section>
+            <h2>参数 / 生成</h2>
+            <div className="field">
+              <label htmlFor="fabric">面料预设</label>
+              <select
+                id="fabric"
+                value={fabric}
+                onChange={(event) => setFabric(event.target.value)}
+              >
+                {FABRICS.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="stitch">针法</label>
+              <select
+                id="stitch"
+                value={stitchType}
+                onChange={(event) =>
+                  setStitchType(event.target.value as "fill" | "running")
+                }
+              >
+                <option value="fill">填充 Fill</option>
+                <option value="running">走线 Running</option>
+              </select>
+            </div>
+            <button
+              type="button"
+              className="button primary wide"
+              onClick={() => void onGenerate()}
+              disabled={busy || generating}
+            >
+              {generating ? "生成中…" : "生成针迹"}
+            </button>
+            <p className="hint">
+              服务端用 Ink/Stitch 无头编译；面料预设决定密度、补偿与打底。
+            </p>
           </section>
 
           <section>
@@ -226,7 +290,7 @@ export default function App() {
         <span>{plan.stats.stitchCount.toLocaleString()} 针</span>
         <span>{sizeLabel(plan)}</span>
         <span className="statusbar-note">
-          Phase 0 · DST 读取 / 导出往返已通过契约测试
+          Phase 1 · 文档 → SVG → 针迹 → DST 已打通
         </span>
       </footer>
     </div>

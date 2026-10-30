@@ -3,6 +3,7 @@ import {
   type StitchPlan,
   type ExportFormat,
 } from "@stitchord/contracts";
+import type { CompileDocument } from "./sampleDoc";
 
 async function readError(response: Response): Promise<string> {
   try {
@@ -38,6 +39,32 @@ export async function exportStitch(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ plan, format }),
+  });
+  if (!response.ok) throw new Error(await readError(response));
+  return response.blob();
+}
+
+export async function digitizeDocument(
+  document: CompileDocument,
+): Promise<StitchPlan> {
+  const response = await fetch("/api/v1/digitize", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(document),
+  });
+  if (!response.ok) throw new Error(await readError(response));
+  const data: unknown = await response.json();
+  if (!isStitchPlan(data)) {
+    throw new Error("服务返回的针迹计划不符合契约");
+  }
+  return data;
+}
+
+export async function digitizeExport(document: CompileDocument): Promise<Blob> {
+  const response = await fetch("/api/v1/digitize/export", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(document),
   });
   if (!response.ok) throw new Error(await readError(response));
   return response.blob();

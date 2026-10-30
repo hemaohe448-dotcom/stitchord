@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 import tempfile
 from pathlib import Path
 
@@ -10,6 +11,8 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 
+from . import inkstitch_adapter
+from .compiler import CompileDocument, compile_svg
 from .convert import read_stitch_plan, write_stitch_file
 from .models import ExportRequest, StitchPlan, ValidationReport
 from .validation import validate_plan
@@ -80,6 +83,45 @@ def preview_stitch(file: UploadFile = File(...)) -> StitchPlan:
 @app.post("/v1/stitch/validate", response_model=ValidationReport)
 def validate(plan: StitchPlan) -> ValidationReport:
     return validate_plan(plan)
+
+
+def _digitize_document(document: CompileDocument):
+    if not inkstitch_adapter.available():
+        raise HTTPException(
+            status_code=503,
+            detail="Ink/Stitch runtime unavailable; run this service on Python 3.11 with the pinned worker image",
+        )
+    work_dir: Path | None = None
+    try:
+        svg = compile_svg(document)
+        work_dir = Path(tempfile.mkdtemp(prefix="stitchord-digitize-"))
+        svg_path = work_dir / "design.svg"
+        svg_path.write_text(svg, encoding="utf-8")
+        return inkstitch_adapter.digitize_svg(svg_path, work_dir / "design.dst")
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    finally:
+        if work_dir is not None:
+            shutil.rmtree(work_dir, ignore_errors=True)
+
+
+@app.post("/v1/digitize", response_model=StitchPlan)
+def digitize(document: CompileDocument) -> StitchPlan:
+    result = _digitize_document(document)
+    return StitchPlan.model_validate(result.plan)
+
+
+@app.post("/v1/digitize/export")
+def digitize_export(document: CompileDocument) -> Response:
+    result = _digitize_document(document)
+    return Response(
+        content=result.dst,
+        media_type="application/octet-stream",
+        headers={
+            "Content-Disposition": 'attachment; filename="stitchord.dst"',
+            "X-Stitch-Sha256": result.sha256,
+        },
+    )
 
 
 @app.post("/v1/stitch/export")

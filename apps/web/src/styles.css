@@ -163,6 +163,34 @@ button {
   margin: 8px 0 0;
 }
 
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.field label {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.field select {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: #10131a;
+  color: var(--text);
+  font: inherit;
+  font-size: 12.5px;
+}
+
+.button.wide {
+  width: 100%;
+  margin-top: 2px;
+}
+
 .stats {
   display: grid;
   grid-template-columns: 1fr 1fr;

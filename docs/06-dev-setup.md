@@ -88,6 +88,23 @@ D:\miniconda\python.exe -m pytest -q
 - 启动顺序：API → 前端；
 - 打开 http://localhost:5173，导入 DST/PES 或直接看示例花样，点“导出 DST”。
 
+### 5.1 文档生成（`/v1/digitize`，需 Python 3.11）
+
+`/v1/digitize` 需要 Ink/Stitch，只能在 3.11 worker 环境运行：
+
+```powershell
+$env:PYTHONPATH='D:\stitchord\services\digitizer;D:\stitchord\.research\repos\inkex;D:\stitchord\.research\repos\inkstitch'
+cd D:\stitchord\services\digitizer
+D:\stitchord\.condaenv\python.exe -m uvicorn app.main:app --port 8000
+```
+
+启动后，网页“参数 / 生成”面板会调用该接口；测试：
+
+```powershell
+$env:PYTHONPATH='D:\stitchord\services\digitizer;D:\stitchord\.research\repos\inkex;D:\stitchord\.research\repos\inkstitch'
+D:\stitchord\.condaenv\python.exe -m pytest -q
+```
+
 ## 6. Docker（Phase 1 起）
 
 本机暂未安装 Docker。安装后：
