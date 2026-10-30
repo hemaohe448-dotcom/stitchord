@@ -72,6 +72,7 @@ interface EditorState {
   setTranslate: (id: string, value: [number, number], commit: boolean) => void;
   addRectangle: () => void;
   addLine: () => void;
+  duplicateSelected: () => void;
   deleteSelected: () => void;
   moveLayer: (layerId: string, delta: number) => void;
   setFabric: (fabric: string) => void;
@@ -193,6 +194,38 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       ],
     };
     set({ doc: next, past: [...past, doc], future: [], selectedId: obj.id });
+  },
+
+  duplicateSelected: () => {
+    const { doc, selectedId, past } = get();
+    if (!doc || !selectedId) return;
+    const created: CompileObject[] = [];
+    const layers = doc.layers.map((layer) => {
+      const index = layer.objects.findIndex((obj) => obj.id === selectedId);
+      if (index < 0) return layer;
+      const source = layer.objects[index];
+      const copy: CompileObject = {
+        ...source,
+        id: `obj-copy-${Date.now()}`,
+        color: { ...source.color },
+        stitch: { ...source.stitch },
+        translateMm: source.translateMm
+          ? [source.translateMm[0] + 5, source.translateMm[1] + 5]
+          : [5, 5],
+      };
+      created.push(copy);
+      const objects = [...layer.objects];
+      objects.splice(index + 1, 0, copy);
+      return { ...layer, objects };
+    });
+    const copy = created[0];
+    if (!copy) return;
+    set({
+      doc: { ...doc, layers },
+      past: [...past, doc],
+      future: [],
+      selectedId: copy.id,
+    });
   },
 
   deleteSelected: () => {

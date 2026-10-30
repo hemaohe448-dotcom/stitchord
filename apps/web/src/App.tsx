@@ -11,7 +11,7 @@ import {
 } from "./api";
 import { StitchCanvas } from "./canvas/StitchCanvas";
 import { FABRICS } from "./sampleDoc";
-import type { CompileObject } from "./sampleDoc";
+import type { CompileDocument, CompileObject } from "./sampleDoc";
 import { useEditorStore } from "./store";
 
 const number = new Intl.NumberFormat("zh-CN");
@@ -47,6 +47,7 @@ export default function App() {
     setTranslate,
     addRectangle,
     addLine,
+    duplicateSelected,
     deleteSelected,
     moveLayer,
     setFabric,
@@ -57,6 +58,7 @@ export default function App() {
   } = useEditorStore();
   const inputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const projectInputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -134,6 +136,83 @@ export default function App() {
     if (file) void handleImage(file);
     event.target.value = "";
   }
+
+  function onSaveProject() {
+    if (!doc) return;
+    const blob = new Blob([JSON.stringify(doc, null, 2)], {
+      type: "application/json",
+    });
+    downloadBlob(blob, `stitchord-${Date.now()}.json`);
+    setNotice("已保存工程 JSON");
+  }
+
+  async function onOpenProject(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    try {
+      const parsed = JSON.parse(await file.text()) as CompileDocument;
+      if (!parsed || !Array.isArray(parsed.layers) || !parsed.layers.length) {
+        throw new Error("不是有效的 Stitchord 工程文件");
+      }
+      setDoc(parsed);
+      setNotice(`${file.name} · 已打开工程`);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    }
+  }
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target && ["INPUT", "SELECT", "TEXTAREA"].includes(target.tagName)) {
+        return;
+      }
+      const state = useEditorStore.getState();
+      const mod = event.ctrlKey || event.metaKey;
+      if (mod && event.key.toLowerCase() === "z") {
+        event.preventDefault();
+        if (event.shiftKey) state.redo();
+        else state.undo();
+        return;
+      }
+      if (mod && event.key.toLowerCase() === "y") {
+        event.preventDefault();
+        state.redo();
+        return;
+      }
+      if (mod && event.key.toLowerCase() === "d") {
+        event.preventDefault();
+        state.duplicateSelected();
+        return;
+      }
+      if (event.key === "Delete" || event.key === "Backspace") {
+        event.preventDefault();
+        state.deleteSelected();
+        return;
+      }
+      if (event.key === "Escape") {
+        state.select(null);
+        return;
+      }
+      if (event.key.startsWith("Arrow") && state.selectedId && state.doc) {
+        event.preventDefault();
+        const object = state.doc.layers
+          .flatMap((layer) => layer.objects)
+          .find((obj) => obj.id === state.selectedId);
+        if (!object) return;
+        const step = event.shiftKey ? 10 : 1;
+        const [x, y] = object.translateMm ?? [0, 0];
+        const next: [number, number] = [
+          x + (event.key === "ArrowRight" ? step : event.key === "ArrowLeft" ? -step : 0),
+          y + (event.key === "ArrowDown" ? step : event.key === "ArrowUp" ? -step : 0),
+        ];
+        state.setTranslate(object.id, next, true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   function onDrop(event: DragEvent<HTMLElement>) {
     event.preventDefault();
@@ -312,6 +391,31 @@ export default function App() {
               onChange={onPickImage}
               hidden
             />
+            <div className="button-row">
+              <button
+                type="button"
+                className="button"
+                onClick={onSaveProject}
+                disabled={!doc}
+              >
+                保存工程
+              </button>
+              <button
+                type="button"
+                className="button"
+                onClick={() => projectInputRef.current?.click()}
+                disabled={busy}
+              >
+                打开工程
+              </button>
+            </div>
+            <input
+              ref={projectInputRef}
+              type="file"
+              accept=".json"
+              onChange={(event) => void onOpenProject(event)}
+              hidden
+            />
             <p className="hint">
               {generating ? "正在重新生成针迹…" : "修改后自动重新编译"}
             </p>
@@ -457,13 +561,22 @@ export default function App() {
                   />
                 </div>
               </div>
-              <button
-                type="button"
-                className="button danger wide"
-                onClick={deleteSelected}
-              >
-                删除对象
-              </button>
+              <div className="button-row">
+                <button
+                  type="button"
+                  className="button"
+                  onClick={duplicateSelected}
+                >
+                  复制对象
+                </button>
+                <button
+                  type="button"
+                  className="button danger"
+                  onClick={deleteSelected}
+                >
+                  删除对象
+                </button>
+              </div>
             </section>
           ) : null}
 
@@ -500,7 +613,8 @@ export default function App() {
               <span>显示跳针路径</span>
             </label>
             <p className="hint">
-              滚轮缩放，拖拽空白平移，拖拽对象移动。预览与导出共用同一计划。
+              滚轮缩放，拖拽空白平移，拖拽对象移动。快捷键：Ctrl+Z/Y 撤销重做，Delete 删除，
+              Ctrl+D 复制，方向键微移（Shift 10mm）。
             </p>
           </section>
         </aside>
