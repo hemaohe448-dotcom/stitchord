@@ -133,6 +133,92 @@ def _strip_border_background(image, tolerance: int = 24):
     return Image.alpha_composite(background, rgba).convert("RGB")
 
 
+def _kmeans_lab(image, k: int):
+    """Deterministic k-means in CIELAB (photo style), returned as an RGB image."""
+    import numpy as np
+    from PIL import Image
+
+    rgb = np.asarray(image.convert("RGB"), dtype=np.float64) / 255.0
+    flat = rgb.reshape(-1, 3)
+
+    linear = np.where(
+        flat <= 0.04045,
+        flat / 12.92,
+        ((flat + 0.055) / 1.055) ** 2.4,
+    )
+    matrix = np.array(
+        [
+            [0.4124564, 0.3575761, 0.1804375],
+            [0.2126729, 0.7151522, 0.0721750],
+            [0.0193339, 0.1191920, 0.9503041],
+        ]
+    )
+    xyz = linear @ matrix.T
+    white = np.array([0.95047, 1.0, 1.08883])
+    xyz = xyz / white
+    f = np.where(xyz > 0.008856, np.cbrt(xyz), 7.787 * xyz + 16.0 / 116.0)
+    lab = np.stack(
+        [116.0 * f[:, 1] - 16.0, 500.0 * (f[:, 0] - f[:, 1]), 200.0 * (f[:, 1] - f[:, 2])],
+        axis=1,
+    )
+
+    step = max(1, len(lab) // 20000)
+    samples = lab[::step]
+    rng = np.random.default_rng(0)
+    centers = [samples[rng.integers(len(samples))]]
+    for _ in range(1, k):
+        distances = np.min(
+            ((samples[:, None, :] - np.array(centers)[None, :, :]) ** 2).sum(axis=2),
+            axis=1,
+        )
+        if distances.sum() == 0:
+            centers.append(samples[len(centers) % len(samples)])
+            continue
+        centers.append(samples[rng.choice(len(samples), p=distances / distances.sum())])
+    centers = np.array(centers)
+
+    labels = np.zeros(len(samples), dtype=np.int32)
+    for _ in range(12):
+        distances = ((samples[:, None, :] - centers[None, :, :]) ** 2).sum(axis=2)
+        labels = np.argmin(distances, axis=1)
+        updated = centers.copy()
+        for index in range(k):
+            members = samples[labels == index]
+            if len(members):
+                updated[index] = members.mean(axis=0)
+        if np.allclose(updated, centers, atol=1e-4):
+            centers = updated
+            break
+        centers = updated
+
+    fy = (centers[:, 0] + 16.0) / 116.0
+    fx = fy + centers[:, 1] / 500.0
+    fz = fy - centers[:, 2] / 200.0
+    xyz = np.stack(
+        [
+            np.where(fx > 0.206897, fx**3, (fx - 16.0 / 116.0) / 7.787),
+            np.where(fy > 0.206897, fy**3, (fy - 16.0 / 116.0) / 7.787),
+            np.where(fz > 0.206897, fz**3, (fz - 16.0 / 116.0) / 7.787),
+        ],
+        axis=1,
+    ) * white
+    inverse = np.linalg.inv(matrix)
+    linear_rgb = xyz @ inverse.T
+    srgb = np.where(
+        linear_rgb <= 0.0031308,
+        12.92 * linear_rgb,
+        1.055 * np.power(np.clip(linear_rgb, 0, None), 1 / 2.4) - 0.055,
+    )
+    palette = np.clip(srgb * 255.0, 0, 255).astype(np.uint8)
+
+    output = np.empty_like(flat, dtype=np.uint8)
+    for start in range(0, len(lab), 100_000):
+        chunk = lab[start : start + 100_000]
+        distances = ((chunk[:, None, :] - centers[None, :, :]) ** 2).sum(axis=2)
+        output[start : start + len(chunk)] = palette[np.argmin(distances, axis=1)]
+    return Image.fromarray(output.reshape(rgb.shape))
+
+
 def vectorize_image(
     data: bytes,
     width_mm: float = 100.0,
@@ -171,9 +257,14 @@ def vectorize_image(
     if style == "photo":
         image = image.filter(ImageFilter.MedianFilter(3))
         image = image.filter(ImageFilter.GaussianBlur(0.6))
-
-    quantized = image.quantize(colors=max_colors, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE)
-    image = quantized.convert("RGB")
+        image = _kmeans_lab(image, max_colors)
+    else:
+        quantized = image.quantize(
+            colors=max_colors,
+            method=Image.Quantize.MEDIANCUT,
+            dither=Image.Dither.NONE,
+        )
+        image = quantized.convert("RGB")
 
     height_mm = width_mm * image.height / image.width
     scale = width_mm / image.width

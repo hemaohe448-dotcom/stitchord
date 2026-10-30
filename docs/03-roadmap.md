@@ -49,7 +49,7 @@
 **进展（2026-10-30）**：库调用路径已跑通（无 Inkscape、需 wxPython、输出确定），
 完成 CompileDocument(mm) → SVG(px) → plan/DST 端到端（2 色块/3490 针），
 fill/running/satin + PES，面料预设（woven/knit 实测差异），
-`/v1/digitize` 已接入 3.11 服务并在网页生成（76 tests），12 例自引用黄金语料。
+`/v1/digitize` 已接入 3.11 服务并在网页生成（77 tests），12 例自引用黄金语料。
 详见 `docs/research/inkstitch-headless.md`、`docs/contracts/compile-document.md`、
 `docs/reference/parameters.md`；剩余：Inkscape 参考对比、Linux 镜像、DST 边界针差异固定。
 
@@ -118,7 +118,8 @@ DST 4,721 B）。仅证明可构建/最小导出；接入评估见 `docs/tasks/T
 
 **进展（2026-10-30）**：确定性基线已跑通——Pillow 量化 + VTracer + 路径缩放 → CompileDocument
 → Ink/Stitch；合成图 2 层/2 路径 → 2,956 针/DST 9,407 B；网页“图片矢量化”可用，
-支持颜色数 2–16、去白底（边缘洪泛，兼容非白背景）、扁平/照片风格（照片模式实验性）。
+支持颜色数 2–16、去白底（边缘洪泛，兼容非白背景）、扁平/照片风格
+（照片模式=中值+轻模糊+CIELAB k-means，实验性）。
 未做：30 张基准集、ML 分割、绣法自动分类、质量指标。详见 `docs/research/vectorization-baseline.md`。
 
 **目标**：上传一张插画，90 秒内得到“可编辑、可上机”的初稿，而不是一堆碎路径。

@@ -10,7 +10,7 @@ from PIL import Image, ImageDraw
 from app.compiler import compile_svg
 from app.main import app
 from app import inkstitch_adapter
-from app.vectorize import vectorize_image
+from app.vectorize import _kmeans_lab, vectorize_image
 
 pytestmark = pytest.mark.skipif(
     importlib.util.find_spec("vtracer") is None,
@@ -86,6 +86,17 @@ def test_photo_style_returns_document():
     )
     assert len(document.layers) >= 1
     assert sum(len(layer.objects) for layer in document.layers) >= 1
+
+
+def test_kmeans_lab_reduces_palette():
+    image = Image.new("RGB", (60, 60), "#e74c3c")
+    draw = ImageDraw.Draw(image)
+    draw.rectangle((20, 0, 39, 59), fill="#3498db")
+    draw.rectangle((40, 0, 59, 59), fill="#f1c40f")
+    quantized = _kmeans_lab(image, 3)
+    colors = quantized.getcolors(maxcolors=100)
+    assert colors is not None
+    assert len(colors) <= 3
 
 
 def test_invalid_style_rejected():
