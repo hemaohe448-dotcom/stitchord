@@ -17,7 +17,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # wxPython imports GTK at import time even when no GUI is shown.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        git libgtk-3-0 libglib2.0-0 libgl1 libsm6 libxext6 libxrender1 libsdl2-2.0-0 \
+        git libgtk-3-0 libglib2.0-0 libgl1 libglu1-mesa libsm6 libxext6 libxrender1 \
+        libsdl2-2.0-0 libnotify4 libjpeg62-turbo libtiff6 libpng16-16 libwebp7 \
+        libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN git clone https://github.com/inkstitch/inkstitch.git /opt/inkstitch \
