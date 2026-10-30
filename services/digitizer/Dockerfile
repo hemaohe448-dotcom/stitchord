@@ -20,6 +20,8 @@ RUN apt-get update \
         git libgtk-3-0 libglib2.0-0 libgl1 libglu1-mesa libsm6 libxext6 libxrender1 \
         libsdl2-2.0-0 libnotify4 libjpeg62-turbo libtiff6 libpng16-16 libwebp7 \
         libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 \
+        libxtst6 libxi6 libxcursor1 libxrandr2 libxinerama1 libxfixes3 \
+        libxcomposite1 libxdamage1 libxkbcommon0 libxkbcommon-x11-0 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN git clone https://github.com/inkstitch/inkstitch.git /opt/inkstitch \
