@@ -13,6 +13,7 @@
     "build": "npm run build -w @stitchord/web",
     "typecheck": "npm run typecheck -w @stitchord/web",
     "test": "npm run test -w @stitchord/web",
+    "test:e2e": "npm run test:e2e -w @stitchord/web",
     "lint": "npm run lint -w @stitchord/web"
   },
   "engines": {

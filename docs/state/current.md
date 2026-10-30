@@ -13,7 +13,7 @@
 - [x] 多智能体协作/防幻觉/上下文规范；
 - [x] 前端骨架：DST/PES 导入 → StitchPlan → Canvas 渲染 → 导出 DST；
 - [x] 后端骨架：预览 / 校验 / 导出 API；
-- [x] 测试：前端 17 个单测，后端 74 个单测/契约测试（3.11 全量）；
+- [x] 测试：前端 17 个单测 + 6 条 Playwright E2E，后端 74 个单测/契约测试（3.11 全量）；
 - [x] 构建：`tsc --noEmit`、`vite build` 通过；
 - [x] Claude 独立架构评审（`docs/reviews/2026-10-30-architecture-review.md`），阻断项已处置
   （`docs/reviews/2026-10-30-response.md`）；
@@ -76,6 +76,8 @@
   不改“文档→SVG→Ink/Stitch”主链路。
 - [x] **P2 针迹播放**：播放/暂停、进度条、慢/中/快、当前针高亮；仅前端，构建通过；
 - [x] **历史上限**：前端 undo 栈统一经 `pushHistory` 截到 100 步；前端 17 个单测。
+- [x] **Playwright 主流程**：6 条 E2E（加载/新增撤销/改参数/保存打开/DST 导入/导出）
+  全部通过，33.8s；证据 `apps/web/e2e/app.spec.ts`。
 - [x] **ADR-0006 用户决策**：选 **A**——自研编辑器优先，Roidery 仅评估，不替换运行时。
 - [x] **ADR-0006 门槛通过（2026-10-30）**：CI 成功构建 `vectorcraft-cli`（15m 10s，
   DST 4,721 B）；仅证明可构建/最小导出，T-0202 静态评估中。

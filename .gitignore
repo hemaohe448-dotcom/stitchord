@@ -48,3 +48,8 @@ tmp*/
 
 stitchord-digitize-*/
 stitchord-vectorize-*/
+
+# Playwright
+apps/web/test-results/
+apps/web/playwright-report/
+apps/web/blob-report/

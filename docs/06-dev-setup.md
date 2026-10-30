@@ -82,6 +82,19 @@ D:\miniconda\python.exe -m pytest -q
 **沙箱注意**：pytest 的临时目录与 pip 的解包目录在沙箱下会被拒绝访问（`PermissionError`），
 需要完全权限运行，或在 CI / 普通终端运行。CI 使用标准 venv，不受此限制。
 
+## 5.1 Playwright E2E（6 条主流程）
+
+前置：Python 3.11 worker 可用、`msedge` 已安装。
+
+```powershell
+cd D:\stitchord\apps\web
+npm run test:e2e
+```
+
+Playwright 会自动启动 API（8000）与 Vite（5173）；也可复用已启动的服务。
+覆盖：加载/生成、加矩形+撤销+重做、改针法/行距、保存/打开工程、DST 导入、DST 导出。
+
+
 ## 5. 前后端联调
 
 - 前端 Vite 已配置 `/api` → `http://127.0.0.1:8000`；
