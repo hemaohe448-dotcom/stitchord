@@ -41,7 +41,10 @@
   删除、图层排序、撤销/重做、修改后 450ms 自动重编译；编辑结果可导出 DST；
 - [x] **P2 持久化**：工程文档写入 localStorage，刷新后恢复（历史/计划不持久化）；
 - [x] **P1 自引用黄金语料**：12 个文档用例 + 平移/确定性，覆盖 fill/running/satin、面料、
-  参数、三对象；3.11 全量 **42 passed**（尚缺 Inkscape 参考逐针对比）。
+  参数、三对象；3.11 全量 **46 passed**（尚缺 Inkscape 参考逐针对比）；
+- [x] **P3 基线矢量化**：`/v1/vectorize`（Pillow 量化 + VTracer + mm 缩放）→ CompileDocument；
+  网页“图片矢量化”按钮；合成图 2 层/2 路径 → 2,956 针/DST 9,407 B；
+  证据 `docs/research/vectorization-baseline.md`。
 - [x] 发现并记录：wxPython 是 import 硬依赖、必须关闭磁盘缓存、plan(px) 与 DST(0.1mm/居中) 的差异。
 
 ## 进行中

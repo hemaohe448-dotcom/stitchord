@@ -10,12 +10,13 @@ Stitchord 不是 Inkscape 的网页壳，也不是把开源项目简单拼在一
 
 ## 当前状态
 
-**Phase 0 已完成；Phase 1 主体完成；Phase 2 编辑器 MVP 进行中。**
+**Phase 0 已完成；Phase 1 主体完成；Phase 2 编辑器 MVP + Phase 3 基线矢量化进行中。**
 
 已用固定的 Ink/Stitch commit 在无 Inkscape 的进程内跑通
-“文档 → SVG → StitchPlan → DST/PES”，支持 fill/running/satin、面料预设与网页内拖拽编辑；
-wxPython 是 import 硬依赖，参数映射与黄金语料仍待完成。
-见 [无头验证报告](docs/research/inkstitch-headless.md) 与 [参数依据](docs/reference/parameters.md)。
+“文档 → SVG → StitchPlan → DST/PES”，支持 fill/running/satin、面料预设、网页拖拽编辑，
+以及“图片 → 量化/矢量化 → 绣花文档”的确定性基线。
+见 [无头验证](docs/research/inkstitch-headless.md)、[参数依据](docs/reference/parameters.md)、
+[矢量化基线](docs/research/vectorization-baseline.md)。
 
 ## 目录
 

@@ -70,6 +70,29 @@ export async function digitizeExport(document: CompileDocument): Promise<Blob> {
   return response.blob();
 }
 
+export interface VectorizeResult {
+  document: CompileDocument;
+  stats: { layers: number; paths: number; widthMm: number; heightMm: number };
+}
+
+export async function vectorizeImage(
+  file: File,
+  widthMm = 100,
+  maxColors = 8,
+): Promise<VectorizeResult> {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("width_mm", String(widthMm));
+  form.append("max_colors", String(maxColors));
+  form.append("remove_background", "true");
+  const response = await fetch("/api/v1/vectorize", {
+    method: "POST",
+    body: form,
+  });
+  if (!response.ok) throw new Error(await readError(response));
+  return (await response.json()) as VectorizeResult;
+}
+
 export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");

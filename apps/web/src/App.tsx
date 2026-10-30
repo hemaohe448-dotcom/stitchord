@@ -7,6 +7,7 @@ import {
   digitizeExport,
   exportStitch,
   previewStitch,
+  vectorizeImage,
 } from "./api";
 import { StitchCanvas } from "./canvas/StitchCanvas";
 import { FABRICS } from "./sampleDoc";
@@ -55,6 +56,7 @@ export default function App() {
     requestFit,
   } = useEditorStore();
   const inputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -108,6 +110,28 @@ export default function App() {
   function onPick(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (file) void handleFile(file);
+    event.target.value = "";
+  }
+
+  async function handleImage(file: File) {
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await vectorizeImage(file, 100, 8);
+      setDoc(result.document);
+      setNotice(
+        `矢量化 · ${result.stats.layers} 色 / ${result.stats.paths} 个路径 · 正在生成针迹…`,
+      );
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function onPickImage(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (file) void handleImage(file);
     event.target.value = "";
   }
 
@@ -272,7 +296,22 @@ export default function App() {
               >
                 加走线
               </button>
+              <button
+                type="button"
+                className="button"
+                onClick={() => imageInputRef.current?.click()}
+                disabled={busy}
+              >
+                图片矢量化
+              </button>
             </div>
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept=".png,.jpg,.jpeg,.webp"
+              onChange={onPickImage}
+              hidden
+            />
             <p className="hint">
               {generating ? "正在重新生成针迹…" : "修改后自动重新编译"}
             </p>

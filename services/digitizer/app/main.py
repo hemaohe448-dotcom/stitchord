@@ -7,7 +7,7 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 
@@ -16,6 +16,7 @@ from .compiler import CompileDocument, compile_svg
 from .convert import read_stitch_plan, write_stitch_file
 from .models import ExportRequest, StitchPlan, ValidationReport
 from .validation import validate_plan
+from .vectorize import vectorize_image
 
 MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 ALLOWED_EXTENSIONS = {".dst", ".pes", ".exp", ".jef", ".vp3", ".xxx"}
@@ -83,6 +84,52 @@ def preview_stitch(file: UploadFile = File(...)) -> StitchPlan:
 @app.post("/v1/stitch/validate", response_model=ValidationReport)
 def validate(plan: StitchPlan) -> ValidationReport:
     return validate_plan(plan)
+
+
+ALLOWED_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
+MAX_IMAGE_BYTES = 15 * 1024 * 1024
+
+
+@app.post("/v1/vectorize")
+def vectorize(
+    file: UploadFile = File(...),
+    width_mm: float = Form(100.0),
+    max_colors: int = Form(8),
+    remove_background: bool = Form(True),
+) -> dict:
+    suffix = Path(file.filename or "").suffix.lower()
+    if suffix not in ALLOWED_IMAGE_EXTENSIONS:
+        raise HTTPException(
+            status_code=415,
+            detail=f"unsupported image type {suffix or '(none)'}; use png/jpg/webp",
+        )
+    data = file.file.read(MAX_IMAGE_BYTES + 1)
+    if len(data) > MAX_IMAGE_BYTES:
+        raise HTTPException(status_code=413, detail="image exceeds 15 MB")
+    if not data:
+        raise HTTPException(status_code=400, detail="empty image")
+
+    try:
+        document = vectorize_image(
+            data,
+            width_mm=width_mm,
+            max_colors=max_colors,
+            remove_background=remove_background,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except Exception as exc:  # PIL/vtracer errors vary
+        raise HTTPException(status_code=422, detail=f"could not vectorize image: {exc}") from exc
+
+    return {
+        "document": document.model_dump(by_alias=True),
+        "stats": {
+            "layers": len(document.layers),
+            "paths": sum(len(layer.objects) for layer in document.layers),
+            "widthMm": document.width_mm,
+            "heightMm": document.height_mm,
+        },
+    }
 
 
 def _digitize_document(document: CompileDocument):

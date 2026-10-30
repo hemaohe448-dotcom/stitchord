@@ -179,7 +179,7 @@ pyembroidery 只用于导入、round-trip 验证与独立回归，不作为第�
 | POST | `/v1/projects` | P4 | 创建工程 |
 | GET/PUT | `/v1/projects/{id}` | P4 | 读取/保存文档 |
 | POST | `/v1/assets` | P4 | 上传原图，返回签名 URL |
-| POST | `/v1/vectorize` | P3 | 创建矢量化任务 |
+| POST | `/v1/vectorize` | ✅ P3 基线 | 图片 → CompileDocument（vtracer，无 ML） |
 | GET | `/v1/jobs/{id}` | P4 | 任务状态 / 进度 / 错误 |
 | POST | `/v1/exports` | P5 | 导出并写入对象存储 |
 
