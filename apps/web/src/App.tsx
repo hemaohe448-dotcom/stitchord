@@ -87,6 +87,7 @@ export default function App() {
     deleteSelected,
     moveLayer,
     toggleLayer,
+    toggleLayerLock,
     deleteLayer,
     duplicateLayer,
     mergeLayerDown,
@@ -696,7 +697,7 @@ export default function App() {
             {doc ? (
               doc.layers.map((layer, layerIndex) => (
                 <div
-                  className={`layer-group ${layer.visible === false ? "is-hidden" : ""}`}
+                  className={`layer-group ${layer.visible === false ? "is-hidden" : ""} ${layer.locked ? "is-locked" : ""}`}
                   key={layer.id}
                 >
                   <div className="layer-head">
@@ -707,6 +708,14 @@ export default function App() {
                       title={layer.visible === false ? "显示图层" : "隐藏图层"}
                     >
                       {layer.visible === false ? "○" : "●"}
+                    </button>
+                    <button
+                      type="button"
+                      className="icon-button"
+                      onClick={() => toggleLayerLock(layer.id)}
+                      title={layer.locked ? "解锁图层" : "锁定图层"}
+                    >
+                      {layer.locked ? "🔒" : "🔓"}
                     </button>
                     <input
                       key={`${layer.id}-${layer.name ?? ""}`}

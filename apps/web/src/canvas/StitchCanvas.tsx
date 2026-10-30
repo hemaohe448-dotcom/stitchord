@@ -64,7 +64,7 @@ function hitTest(
 ): CompileObject | null {
   for (let li = doc.layers.length - 1; li >= 0; li -= 1) {
     const layer = doc.layers[li];
-    if (layer.visible === false) continue;
+    if (layer.visible === false || layer.locked) continue;
     const objects = layer.objects;
     for (let oi = objects.length - 1; oi >= 0; oi -= 1) {
       const obj = objects[oi];
@@ -293,7 +293,18 @@ export function StitchCanvas({
       ctx.setLineDash([]);
 
       const selected = findObject(doc, selectedId);
-      if (nodeMode && selected && !selected.locked && !selected.hidden) {
+      const selectedLayer = selected
+        ? doc.layers.find((layer) =>
+            layer.objects.some((obj) => obj.id === selected.id),
+          )
+        : null;
+      if (
+        nodeMode &&
+        selected &&
+        !selected.locked &&
+        !selected.hidden &&
+        !selectedLayer?.locked
+      ) {
         const curve = parseCurve(selected.pathD);
         if (curve) {
           const [dx, dy] = selected.translateMm ?? [0, 0];

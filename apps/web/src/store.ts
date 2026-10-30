@@ -85,6 +85,7 @@ interface EditorState {
   deleteSelected: () => void;
   moveLayer: (layerId: string, delta: number) => void;
   toggleLayer: (layerId: string) => void;
+  toggleLayerLock: (layerId: string) => void;
   deleteLayer: (layerId: string) => void;
   duplicateLayer: (layerId: string) => void;
   mergeLayerDown: (layerId: string) => void;
@@ -363,6 +364,15 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     if (target.visible !== false && visibleCount <= 1) return;
     const layers = doc.layers.map((layer) =>
       layer.id === layerId ? { ...layer, visible: layer.visible === false } : layer,
+    );
+    set({ doc: { ...doc, layers }, past: pushHistory(past, doc), future: [] });
+  },
+
+  toggleLayerLock: (layerId) => {
+    const { doc, past } = get();
+    if (!doc) return;
+    const layers = doc.layers.map((layer) =>
+      layer.id === layerId ? { ...layer, locked: !layer.locked } : layer,
     );
     set({ doc: { ...doc, layers }, past: pushHistory(past, doc), future: [] });
   },

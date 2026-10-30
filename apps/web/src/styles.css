@@ -274,6 +274,10 @@ button {
   opacity: 0.55;
 }
 
+.layer-group.is-locked .layer-name {
+  font-style: italic;
+}
+
 .icon-button {
   border: 1px solid var(--border);
   background: transparent;

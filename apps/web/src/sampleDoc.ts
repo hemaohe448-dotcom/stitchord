@@ -24,6 +24,7 @@ export interface CompileLayer {
   id: string;
   name?: string;
   visible?: boolean;
+  locked?: boolean;
   objects: CompileObject[];
 }
 

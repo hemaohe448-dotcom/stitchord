@@ -94,6 +94,11 @@ test("duplicates, renames and merges layers", async ({ page }) => {
   await groups.nth(1).getByTitle("向下合并图层").click();
   await expect(groups).toHaveCount(2);
   await expect(page.locator(".object-row")).toHaveCount(3);
+
+  await groups.first().getByTitle("锁定图层").click();
+  await expect(groups.first()).toHaveClass(/is-locked/);
+  await groups.first().getByTitle("解锁图层").click();
+  await expect(groups.first()).not.toHaveClass(/is-locked/);
 });
 
 test("exports a DST", async ({ page }) => {
