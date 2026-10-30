@@ -22,6 +22,13 @@ def test_health():
     assert response.json()["status"] == "ok"
 
 
+def test_ready_reflects_runtime():
+    response = client.get("/ready")
+    from app import inkstitch_adapter
+
+    assert response.status_code == (200 if inkstitch_adapter.available() else 503)
+
+
 def test_preview_dst():
     response = client.post(
         "/v1/stitch/preview",
@@ -77,6 +84,16 @@ def test_worksheet_pdf():
     assert response.headers["content-type"] == "application/pdf"
     assert response.content.startswith(b"%PDF")
     assert len(response.content) > 2000
+
+
+def test_worksheet_accepts_chinese_name():
+    plan = sample_plan().model_dump(by_alias=True)
+    response = client.post(
+        "/v1/worksheet",
+        json={"plan": plan, "projectName": "订单 A-1024"},
+    )
+    assert response.status_code == 200, response.text
+    assert response.content.startswith(b"%PDF")
 
 
 def test_api_key_guard(monkeypatch):

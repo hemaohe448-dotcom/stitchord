@@ -172,7 +172,8 @@ pyembroidery 只用于导入、round-trip 验证与独立回归，不作为第�
 
 | 方法 | 路径 | 状态 | 说明 |
 | --- | --- | --- | --- |
-| GET | `/health` | ✅ | 健康检查 |
+| GET | `/health` | ✅ | 进程存活（不检查 Ink/Stitch） |
+| GET | `/ready` | ✅ | Ink/Stitch 可导入才 200，否则 503 |
 | POST | `/v1/stitch/preview` | ✅ | 上传 DST/PES/… → StitchPlan |
 | POST | `/v1/stitch/validate` | ✅ | 静态规则校验 |
 | POST | `/v1/stitch/export` | ✅ | StitchPlan → DST/EXP/… |

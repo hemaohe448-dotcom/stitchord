@@ -11,7 +11,7 @@ from typing import Literal
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response
+from fastapi.responses import JSONResponse, Response
 
 from . import cache, inkstitch_adapter
 from .compiler import CompileDocument, compile_svg
@@ -58,6 +58,16 @@ async def request_guard(request, call_next):
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok", "service": "digitizer", "version": "0.1.0"}
+
+
+@app.get("/ready")
+def ready():
+    if not inkstitch_adapter.available():
+        return JSONResponse(
+            {"status": "not-ready", "reason": "Ink/Stitch import failed"},
+            status_code=503,
+        )
+    return {"status": "ready", "service": "digitizer"}
 
 
 def _require_suffix(filename: str) -> str:

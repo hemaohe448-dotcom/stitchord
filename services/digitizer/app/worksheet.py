@@ -19,6 +19,25 @@ from .validation import computed_bounds, computed_stats
 
 PAGE_W, PAGE_H = A4
 MARGIN = 40
+_CJK_FONT: str | None = None
+_CJK_CHECKED = False
+
+
+def _cjk_font() -> str | None:
+    """Register ReportLab's built-in CID font so Chinese project names render."""
+    global _CJK_FONT, _CJK_CHECKED
+    if _CJK_CHECKED:
+        return _CJK_FONT
+    _CJK_CHECKED = True
+    try:
+        from reportlab.pdfbase import pdfmetrics
+        from reportlab.pdfbase.cidfonts import UnicodeCIDFont
+
+        pdfmetrics.registerFont(UnicodeCIDFont("STSong-Light"))
+        _CJK_FONT = "STSong-Light"
+    except Exception:
+        _CJK_FONT = None
+    return _CJK_FONT
 
 
 def _render_preview(plan: StitchPlan, width: int = 1200, height: int = 700) -> Image.Image:
@@ -73,7 +92,8 @@ def build_worksheet(
     pdf.setAuthor("Stitchord")
 
     y = PAGE_H - MARGIN
-    pdf.setFont("Helvetica-Bold", 18)
+    title_font = _cjk_font() or "Helvetica-Bold"
+    pdf.setFont(title_font, 18)
     pdf.drawString(MARGIN, y, project_name)
     y -= 18
     pdf.setFont("Helvetica", 9)

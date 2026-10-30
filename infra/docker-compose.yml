@@ -9,7 +9,7 @@ services:
       STITCHORD_CORS_ORIGINS: http://localhost:5173
       STITCHORD_WORK_DIR: /tmp
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready')"]
       interval: 10s
       timeout: 3s
       retries: 5

@@ -13,7 +13,7 @@
 - [x] 多智能体协作/防幻觉/上下文规范；
 - [x] 前端骨架：DST/PES 导入 → StitchPlan → Canvas 渲染 → 导出 DST；
 - [x] 后端骨架：预览 / 校验 / 导出 API；
-- [x] 测试：前端 17 个单测 + 9 条 Playwright E2E，后端 77 个单测/契约测试（3.11 全量）；
+- [x] 测试：前端 17 个单测 + 9 条 Playwright E2E，后端 79 个单测/契约测试（3.11 全量）；
 - [x] 构建：`tsc --noEmit`、`vite build` 通过；
 - [x] Claude 独立架构评审（`docs/reviews/2026-10-30-architecture-review.md`），阻断项已处置
   （`docs/reviews/2026-10-30-response.md`）；
@@ -41,7 +41,7 @@
   删除、图层排序、撤销/重做、修改后 450ms 自动重编译；编辑结果可导出 DST；
 - [x] **P2 持久化**：工程文档写入 localStorage，刷新后恢复（历史/计划不持久化）；
 - [x] **P1 自引用黄金语料**：12 个文档用例 + 平移/确定性，覆盖 fill/running/satin、面料、
-  参数、三对象；3.11 全量 **77 passed**（尚缺 Inkscape 参考逐针对比）；
+  参数、三对象；3.11 全量 **79 passed**（尚缺 Inkscape 参考逐针对比）；
 - [x] **P3 基线矢量化**：`/v1/vectorize`（Pillow 量化 + VTracer + mm 缩放）→ CompileDocument；
   网页“图片矢量化”按钮；合成图 2 层/2 路径 → 2,956 针/DST 9,407 B；
   现已支持颜色数 2–16、去白底（边缘洪泛填充，兼容非白背景）、
@@ -85,7 +85,9 @@
 - [x] **图层管理**：重命名（失焦/Enter 提交）、复制图层、向下合并；对象 id 去重；
 - [x] **图层锁定**：锁定后画布不可选中/拖动/节点编辑，仍参与编译；对象级锁定继续保留；
 - [x] **工程名/订单抬头**：`CompileDocument.name` 可编辑、随工程 JSON 保存，
-  工艺单 PDF 抬头使用该名称（空则 Stitchord Design）。
+  工艺单 PDF 抬头使用该名称（空则 Stitchord Design）；中文抬头用 STSong CID 字体；
+- [x] **就绪探针**：`/ready` 检查 Ink/Stitch import；`/health` 仍只表示进程存活，
+  compose healthcheck 已改用 `/ready`。
 - [x] **上机规则扩展**：跳针过长、跳针比例过高、剪线过多、色块过多均给出 warning；
   不阻塞导出，交由制版师判断。
 - [x] **worker 镜像 CI 入口**：新增 `.github/workflows/worker-image.yml`（手动触发）：
