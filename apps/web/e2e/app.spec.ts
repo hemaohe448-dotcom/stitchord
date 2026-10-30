@@ -1,9 +1,22 @@
 import { expect, test, type Page } from "@playwright/test";
+import { createHash } from "node:crypto";
+import { readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const fixture = (name: string) => path.join(here, "fixtures", name);
+
+async function exportDst(page: Page, name: string): Promise<string> {
+  const button = page.getByRole("button", { name: "导出 DST" });
+  await expect(button).toBeEnabled();
+  const downloadPromise = page.waitForEvent("download");
+  await button.click();
+  const download = await downloadPromise;
+  const target = path.join(test.info().outputDir, name);
+  await download.saveAs(target);
+  return createHash("sha256").update(readFileSync(target)).digest("hex");
+}
 
 async function openApp(page: Page) {
   await page.goto("/");
@@ -99,6 +112,24 @@ test("duplicates, renames and merges layers", async ({ page }) => {
   await expect(groups.first()).toHaveClass(/is-locked/);
   await groups.first().getByTitle("解锁图层").click();
   await expect(groups.first()).not.toHaveClass(/is-locked/);
+});
+
+test("100 edits and undos restore an identical DST", async ({ page }) => {
+  await openApp(page);
+  await expect(page.getByText(/已生成/).first()).toBeVisible();
+  const before = await exportDst(page, "before.dst");
+
+  await page.locator(".object-row").first().click();
+  for (let index = 0; index < 100; index += 1) {
+    await page.keyboard.press("ArrowRight");
+  }
+  for (let index = 0; index < 100; index += 1) {
+    await page.keyboard.press("Control+z");
+  }
+  await expect(page.getByText(/已生成/).first()).toBeVisible();
+
+  const after = await exportDst(page, "after.dst");
+  expect(after).toBe(before);
 });
 
 test("exports a DST", async ({ page }) => {
