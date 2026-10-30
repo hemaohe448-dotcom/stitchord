@@ -99,9 +99,8 @@
   compose healthcheck 已改用 `/ready`。
 - [x] **上机规则扩展**：跳针过长、跳针比例过高、剪线过多、色块过多均给出 warning；
   不阻塞导出，交由制版师判断。
-- [x] **worker 镜像 CI 入口**：GitHub run `41084822203/41086220477`：`Build image` ✅、
-  `Run container` ✅、应用 import ❌（`parents[3]` 在 `/app/app` 越界）；
-  已改为安全 repo root + 容器内 env 路径，新增 `test_path_layout.py`；待重跑。
+- [x] **worker 镜像 CI 入口**：容器 App 已启动 `/health` ✅；`/ready` 503（Ink/Stitch import 失败），
+  `/ready` 现在返回 import traceback，workflow 增加 wx/Ink-Stitch 诊断步骤；待重跑定位。
 - [x] **GitHub ci**：commit `0653c89` 成功；Vitest 已排除 e2e。
 - [x] **ADR-0006 用户决策**：选 **A**——自研编辑器优先，Roidery 仅评估，不替换运行时。
 - [x] **ADR-0006 门槛通过（2026-10-30）**：CI 成功构建 `vectorcraft-cli`（15m 10s，

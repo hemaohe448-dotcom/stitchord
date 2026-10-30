@@ -66,7 +66,11 @@ def health() -> dict[str, str]:
 def ready():
     if not inkstitch_adapter.available():
         return JSONResponse(
-            {"status": "not-ready", "reason": "Ink/Stitch import failed"},
+            {
+                "status": "not-ready",
+                "reason": "Ink/Stitch import failed",
+                "error": (inkstitch_adapter.import_error() or "unknown")[:4000],
+            },
             status_code=503,
         )
     return {"status": "ready", "service": "digitizer"}

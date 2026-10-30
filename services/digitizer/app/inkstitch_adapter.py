@@ -10,6 +10,7 @@ import hashlib
 import os
 import sys
 import threading
+import traceback
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -25,6 +26,7 @@ _ADAPTER_PATH = Path(__file__).resolve()
 _REPO_ROOT = _repo_root_for(_ADAPTER_PATH)
 _import_checked = False
 _import_ok = False
+_last_import_error: str | None = None
 
 
 @dataclass
@@ -50,7 +52,7 @@ def _prepare_paths() -> None:
 
 def available() -> bool:
     """True when Ink/Stitch can be imported in this interpreter."""
-    global _import_checked, _import_ok
+    global _import_checked, _import_ok, _last_import_error
     if _import_checked:
         return _import_ok
     _import_checked = True
@@ -60,9 +62,15 @@ def available() -> bool:
         from lib.elements import node_to_elements  # noqa: F401
 
         _import_ok = True
-    except Exception:  # noqa: BLE001 - optional capability
+        _last_import_error = None
+    except Exception as exc:  # noqa: BLE001 - optional capability
         _import_ok = False
+        _last_import_error = f"{type(exc).__name__}: {exc}\n{traceback.format_exc()}"
     return _import_ok
+
+
+def import_error() -> str | None:
+    return _last_import_error
 
 
 def _plan_to_contract(plan, dpi: float = 96.0) -> dict:

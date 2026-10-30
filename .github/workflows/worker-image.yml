@@ -18,6 +18,12 @@ jobs:
       - name: Import check
         run: docker run --rm stitchord-digitizer python -c "import app.main; print('app import ok')"
 
+      - name: wx/Ink-Stitch import diagnostics
+        run: |
+          docker run --rm stitchord-digitizer python -c "import wx; print('wx', wx.version())" || true
+          docker run --rm stitchord-digitizer python -c "import inkex; from lib.elements import node_to_elements; print('inkstitch import ok')" || true
+          docker run --rm stitchord-digitizer ls -la /opt/inkex /opt/inkstitch | head -40 || true
+
       - name: Run container
         run: |
           docker run -d --name digitizer -p 8000:8000 stitchord-digitizer
