@@ -12,9 +12,11 @@ interface StitchCanvasProps {
   doc: CompileDocument | null;
   selectedId: string | null;
   nodeMode: boolean;
+  drawMode: boolean;
   onSelect: (id: string | null) => void;
   onMove: (id: string, value: [number, number], commit: boolean) => void;
   onPath: (id: string, pathD: string, commit: boolean) => void;
+  onDraw: (points: Array<[number, number]>) => void;
 }
 
 type DragState =
@@ -35,7 +37,8 @@ type DragState =
       translate: [number, number];
       startPath: string;
       lastPath: string;
-    };
+    }
+  | { mode: "draw" };
 
 function findObject(doc: CompileDocument, id: string | null): CompileObject | null {
   if (!id) return null;
@@ -87,9 +90,11 @@ export function StitchCanvas({
   doc,
   selectedId,
   nodeMode,
+  drawMode,
   onSelect,
   onMove,
   onPath,
+  onDraw,
 }: StitchCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -98,6 +103,7 @@ export function StitchCanvas({
   const lastFit = useRef<{ token: number; width: number; height: number } | null>(
     null,
   );
+  const [drawPoints, setDrawPoints] = useState<Array<[number, number]>>([]);
   const [viewport, setViewport] = useState<Viewport>({
     scale: 1,
     tx: 0,
@@ -277,7 +283,21 @@ export function StitchCanvas({
         }
       }
     }
-  }, [plan, hidden, showJumps, viewport, size, doc, selectedId, nodeMode]);
+
+    if (drawPoints.length > 1) {
+      ctx.strokeStyle = "#f6ad55";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 3]);
+      ctx.beginPath();
+      drawPoints.forEach(([x, y], index) => {
+        const point = toScreen(x, y, viewport);
+        if (index === 0) ctx.moveTo(point.x, point.y);
+        else ctx.lineTo(point.x, point.y);
+      });
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }, [plan, hidden, showJumps, viewport, size, doc, selectedId, nodeMode, drawPoints]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -299,7 +319,7 @@ export function StitchCanvas({
     <div className="canvas-shell" ref={containerRef}>
       <canvas
         ref={canvasRef}
-        className="stitch-canvas"
+        className={drawMode ? "stitch-canvas is-drawing" : "stitch-canvas"}
         onPointerDown={(event) => {
           const canvas = canvasRef.current;
           if (!canvas) return;
@@ -309,6 +329,12 @@ export function StitchCanvas({
             event.clientY - rect.top,
             viewport,
           );
+          if (drawMode) {
+            setDrawPoints([[world.x, world.y]]);
+            dragRef.current = { mode: "draw" };
+            event.currentTarget.setPointerCapture(event.pointerId);
+            return;
+          }
           const ctx = canvas.getContext("2d");
           const selectedObject = doc ? findObject(doc, selectedId) : null;
           if (nodeMode && selectedObject && ctx) {
@@ -364,6 +390,24 @@ export function StitchCanvas({
         onPointerMove={(event) => {
           const drag = dragRef.current;
           if (!drag) return;
+          if (drag.mode === "draw") {
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+            const rect = canvas.getBoundingClientRect();
+            const world = toWorld(
+              event.clientX - rect.left,
+              event.clientY - rect.top,
+              viewport,
+            );
+            setDrawPoints((previous) => {
+              const last = previous[previous.length - 1];
+              if (last && Math.hypot(world.x - last[0], world.y - last[1]) < 0.8) {
+                return previous;
+              }
+              return [...previous, [world.x, world.y]];
+            });
+            return;
+          }
           if (drag.mode === "pan") {
             setViewport((current) => ({
               ...current,
@@ -405,7 +449,10 @@ export function StitchCanvas({
         }}
         onPointerUp={() => {
           const drag = dragRef.current;
-          if (drag?.mode === "node") {
+          if (drag?.mode === "draw") {
+            if (drawPoints.length >= 2) onDraw(drawPoints);
+            setDrawPoints([]);
+          } else if (drag?.mode === "node") {
             onPath(drag.id, drag.lastPath, true);
           } else if (drag?.mode === "object" && drag.moved) {
             onMove(drag.id, drag.last, true);
@@ -413,6 +460,7 @@ export function StitchCanvas({
           dragRef.current = null;
         }}
         onPointerCancel={() => {
+          setDrawPoints([]);
           dragRef.current = null;
         }}
       />

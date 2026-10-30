@@ -49,6 +49,7 @@ export default function App() {
     setPath,
     addRectangle,
     addLine,
+    addFreehand,
     duplicateSelected,
     deleteSelected,
     moveLayer,
@@ -64,6 +65,7 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [nodeMode, setNodeMode] = useState(false);
+  const [drawMode, setDrawMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState("示例工程 · 正在生成针迹…");
 
@@ -388,6 +390,16 @@ export default function App() {
               >
                 图片矢量化
               </button>
+              <button
+                type="button"
+                className={drawMode ? "button primary" : "button"}
+                onClick={() => {
+                  setDrawMode((value) => !value);
+                  setNodeMode(false);
+                }}
+              >
+                {drawMode ? "结束绘制" : "自由绘制"}
+              </button>
             </div>
             <input
               ref={imageInputRef}
@@ -422,7 +434,11 @@ export default function App() {
               hidden
             />
             <p className="hint">
-              {generating ? "正在重新生成针迹…" : "修改后自动重新编译"}
+              {drawMode
+                ? "在画布上按住拖动绘制走线，松开生成对象（之后可节点编辑）。"
+                : generating
+                  ? "正在重新生成针迹…"
+                  : "修改后自动重新编译"}
             </p>
           </section>
 
@@ -653,9 +669,11 @@ export default function App() {
             doc={doc}
             selectedId={selectedId}
             nodeMode={nodeMode}
+            drawMode={drawMode}
             onSelect={select}
             onMove={setTranslate}
             onPath={setPath}
+            onDraw={addFreehand}
           />
           {error ? (
             <div className="banner error" role="alert">

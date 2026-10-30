@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { StitchPlan } from "@stitchord/contracts";
 import { makeMockPlan } from "./mock";
 import { buildSampleDocument } from "./sampleDoc";
+import { serializePolyline } from "./path";
 import type {
   CompileDocument,
   CompileObject,
@@ -73,6 +74,7 @@ interface EditorState {
   setPath: (id: string, pathD: string, commit: boolean) => void;
   addRectangle: () => void;
   addLine: () => void;
+  addFreehand: (points: Array<[number, number]>) => void;
   duplicateSelected: () => void;
   deleteSelected: () => void;
   moveLayer: (layerId: string, delta: number) => void;
@@ -207,6 +209,27 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       ],
     };
     set({ doc: next, past: [...past, doc], future: [], selectedId: obj.id });
+  },
+
+  addFreehand: (points) => {
+    const { doc, past } = get();
+    if (!doc || points.length < 2) return;
+    const id = `obj-draw-${Date.now()}`;
+    const index = doc.layers.length;
+    const obj: CompileObject = {
+      id,
+      pathD: serializePolyline({ points, closed: false }),
+      color: { hex: COLORS[index % COLORS.length], name: "freehand" },
+      stitch: { type: "running" },
+    };
+    const next: CompileDocument = {
+      ...doc,
+      layers: [
+        ...doc.layers,
+        { id: `layer-draw-${Date.now()}`, name: "freehand", objects: [obj] },
+      ],
+    };
+    set({ doc: next, past: [...past, doc], future: [], selectedId: id });
   },
 
   duplicateSelected: () => {

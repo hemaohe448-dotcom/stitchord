@@ -436,6 +436,10 @@ button {
   cursor: grabbing;
 }
 
+.stitch-canvas.is-drawing {
+  cursor: crosshair;
+}
+
 .banner {
   position: absolute;
   left: 18px;
