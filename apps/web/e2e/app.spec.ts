@@ -77,6 +77,25 @@ test("hides and locks an object", async ({ page }) => {
   await expect(row).toHaveClass(/is-locked/);
 });
 
+test("duplicates, renames and merges layers", async ({ page }) => {
+  await openApp(page);
+  const groups = page.locator(".layer-group");
+  await expect(groups).toHaveCount(2);
+
+  await page.getByTitle("复制图层").first().click();
+  await expect(groups).toHaveCount(3);
+  await expect(page.locator(".object-row")).toHaveCount(3);
+
+  const first = groups.first();
+  await first.locator(".layer-name").fill("front");
+  await first.locator(".layer-name").press("Enter");
+  await expect(first.locator(".layer-name")).toHaveValue("front");
+
+  await groups.nth(1).getByTitle("向下合并图层").click();
+  await expect(groups).toHaveCount(2);
+  await expect(page.locator(".object-row")).toHaveCount(3);
+});
+
 test("exports a DST", async ({ page }) => {
   await openApp(page);
   const button = page.getByRole("button", { name: "导出 DST" });

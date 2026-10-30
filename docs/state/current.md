@@ -13,7 +13,7 @@
 - [x] 多智能体协作/防幻觉/上下文规范；
 - [x] 前端骨架：DST/PES 导入 → StitchPlan → Canvas 渲染 → 导出 DST；
 - [x] 后端骨架：预览 / 校验 / 导出 API；
-- [x] 测试：前端 17 个单测 + 7 条 Playwright E2E，后端 76 个单测/契约测试（3.11 全量）；
+- [x] 测试：前端 17 个单测 + 8 条 Playwright E2E，后端 76 个单测/契约测试（3.11 全量）；
 - [x] 构建：`tsc --noEmit`、`vite build` 通过；
 - [x] Claude 独立架构评审（`docs/reviews/2026-10-30-architecture-review.md`），阻断项已处置
   （`docs/reviews/2026-10-30-response.md`）；
@@ -76,11 +76,12 @@
   不改“文档→SVG→Ink/Stitch”主链路。
 - [x] **P2 针迹播放**：播放/暂停、进度条、慢/中/快、当前针高亮；仅前端，构建通过；
 - [x] **历史上限**：前端 undo 栈统一经 `pushHistory` 截到 100 步；前端 17 个单测。
-- [x] **Playwright 主流程**：7 条 E2E（加载/新增撤销/改参数/保存打开/DST 导入/
-  对象隐藏锁定/导出）全部通过，30.7s；证据 `apps/web/e2e/app.spec.ts`；
+- [x] **Playwright 主流程**：8 条 E2E（加载/新增撤销/改参数/保存打开/DST 导入/
+  对象隐藏锁定/图层复制改名合并/导出）全部通过，32.4s；证据 `apps/web/e2e/app.spec.ts`；
 - [x] **对象级隐藏/锁定**：隐藏对象不参与编译，锁定对象不可在画布选中/拖动/节点编辑；
   编译器有 hidden 回归测试；
 - [x] **针法参数面板扩展**：running 针距/线宽，satin 密度/拉布补偿，fill/satin 打底开关；
+- [x] **图层管理**：重命名（失焦/Enter 提交）、复制图层、向下合并；对象 id 去重；
 - [x] **上机规则扩展**：跳针过长、跳针比例过高、剪线过多、色块过多均给出 warning；
   不阻塞导出，交由制版师判断。
 - [x] **worker 镜像 CI 入口**：新增 `.github/workflows/worker-image.yml`（手动触发）：

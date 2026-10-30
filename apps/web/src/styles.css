@@ -250,12 +250,24 @@ button {
   color: var(--muted);
 }
 
-.layer-head strong {
+.layer-name {
   flex: 1;
+  min-width: 0;
   margin-left: 4px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  padding: 1px 3px;
+  border-radius: 4px;
+}
+
+.layer-name:hover,
+.layer-name:focus {
+  border-color: var(--border);
+  color: var(--text);
+  outline: none;
 }
 
 .layer-group.is-hidden {

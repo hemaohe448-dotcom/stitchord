@@ -86,6 +86,9 @@ interface EditorState {
   moveLayer: (layerId: string, delta: number) => void;
   toggleLayer: (layerId: string) => void;
   deleteLayer: (layerId: string) => void;
+  duplicateLayer: (layerId: string) => void;
+  mergeLayerDown: (layerId: string) => void;
+  renameLayer: (layerId: string, name: string) => void;
   setFabric: (fabric: string) => void;
   undo: () => void;
   redo: () => void;
@@ -374,6 +377,68 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       selectedId: null,
       selectedIds: [],
     });
+  },
+
+  duplicateLayer: (layerId) => {
+    const { doc, past } = get();
+    if (!doc) return;
+    const index = doc.layers.findIndex((layer) => layer.id === layerId);
+    if (index < 0) return;
+    const source = doc.layers[index];
+    const stamp = Date.now();
+    const copy = {
+      ...source,
+      id: `layer-copy-${stamp}`,
+      name: `${source.name ?? source.id} copy`,
+      objects: source.objects.map((obj, objIndex) => ({
+        ...obj,
+        id: `${obj.id}-copy-${stamp}-${objIndex}`,
+        color: { ...obj.color },
+        stitch: { ...obj.stitch },
+      })),
+    };
+    const layers = [...doc.layers];
+    layers.splice(index + 1, 0, copy);
+    set({
+      doc: { ...doc, layers },
+      past: pushHistory(past, doc),
+      future: [],
+      selectedId: null,
+      selectedIds: [],
+    });
+  },
+
+  mergeLayerDown: (layerId) => {
+    const { doc, past } = get();
+    if (!doc) return;
+    const index = doc.layers.findIndex((layer) => layer.id === layerId);
+    if (index <= 0) return;
+    const current = doc.layers[index];
+    const previous = doc.layers[index - 1];
+    const merged = {
+      ...previous,
+      objects: [...previous.objects, ...current.objects],
+    };
+    const layers = [...doc.layers];
+    layers.splice(index - 1, 2, merged);
+    set({
+      doc: { ...doc, layers },
+      past: pushHistory(past, doc),
+      future: [],
+      selectedId: null,
+      selectedIds: [],
+    });
+  },
+
+  renameLayer: (layerId, name) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const { doc, past } = get();
+    if (!doc) return;
+    const layers = doc.layers.map((layer) =>
+      layer.id === layerId ? { ...layer, name: trimmed } : layer,
+    );
+    set({ doc: { ...doc, layers }, past: pushHistory(past, doc), future: [] });
   },
 
   setFabric: (fabric) => {

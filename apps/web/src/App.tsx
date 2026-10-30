@@ -88,6 +88,9 @@ export default function App() {
     moveLayer,
     toggleLayer,
     deleteLayer,
+    duplicateLayer,
+    mergeLayerDown,
+    renameLayer,
     setFabric,
     undo,
     redo,
@@ -705,7 +708,16 @@ export default function App() {
                     >
                       {layer.visible === false ? "○" : "●"}
                     </button>
-                    <strong>{layer.name ?? layer.id}</strong>
+                    <input
+                      key={`${layer.id}-${layer.name ?? ""}`}
+                      className="layer-name"
+                      defaultValue={layer.name ?? layer.id}
+                      onBlur={(event) => renameLayer(layer.id, event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") event.currentTarget.blur();
+                      }}
+                      title="点击重命名"
+                    />
                     <span className="layer-actions">
                       <button
                         type="button"
@@ -722,6 +734,21 @@ export default function App() {
                         title="下移图层"
                       >
                         ↓
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => duplicateLayer(layer.id)}
+                        title="复制图层"
+                      >
+                        ⧉
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => mergeLayerDown(layer.id)}
+                        disabled={layerIndex === 0}
+                        title="向下合并图层"
+                      >
+                        ⤓
                       </button>
                       <button
                         type="button"
