@@ -174,6 +174,7 @@ pyembroidery 只用于导入、round-trip 验证与独立回归，不作为第�
 | POST | `/v1/stitch/preview` | ✅ | 上传 DST/PES/… → StitchPlan |
 | POST | `/v1/stitch/validate` | ✅ | 静态规则校验 |
 | POST | `/v1/stitch/export` | ✅ | StitchPlan → DST/EXP/… |
+| POST | `/v1/stitch/check` | ✅ P2 | 静态规则 + 绣框适配校验 |
 | POST | `/v1/digitize` | ✅ P1 | CompileDocument → StitchPlan（Ink/Stitch） |
 | POST | `/v1/digitize/export` | ✅ P1 | CompileDocument → DST 字节（确定性） |
 | POST | `/v1/projects` | P4 | 创建工程 |

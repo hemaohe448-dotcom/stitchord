@@ -74,6 +74,12 @@ class ExportRequest(ContractModel):
     format: Literal["dst", "exp", "jef", "pes", "vp3", "xxx"] = "dst"
 
 
+class CheckRequest(ContractModel):
+    plan: StitchPlan
+    hoop_width_mm: float = Field(default=100.0, gt=0)
+    hoop_height_mm: float = Field(default=100.0, gt=0)
+
+
 class Severity(str):
     ERROR = "error"
     WARNING = "warning"

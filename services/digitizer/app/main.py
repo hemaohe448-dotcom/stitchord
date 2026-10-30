@@ -14,8 +14,8 @@ from fastapi.responses import Response
 from . import inkstitch_adapter
 from .compiler import CompileDocument, compile_svg
 from .convert import read_stitch_plan, write_stitch_file
-from .models import ExportRequest, StitchPlan, ValidationReport
-from .validation import validate_plan
+from .models import CheckRequest, ExportRequest, StitchPlan, ValidationReport
+from .validation import validate_plan, validate_with_hoop
 from .vectorize import vectorize_image
 
 MAX_UPLOAD_BYTES = 25 * 1024 * 1024
@@ -84,6 +84,13 @@ def preview_stitch(file: UploadFile = File(...)) -> StitchPlan:
 @app.post("/v1/stitch/validate", response_model=ValidationReport)
 def validate(plan: StitchPlan) -> ValidationReport:
     return validate_plan(plan)
+
+
+@app.post("/v1/stitch/check", response_model=ValidationReport)
+def check(request: CheckRequest) -> ValidationReport:
+    return validate_with_hoop(
+        request.plan, request.hoop_width_mm, request.hoop_height_mm
+    )
 
 
 ALLOWED_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}

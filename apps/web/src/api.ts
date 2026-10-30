@@ -70,6 +70,33 @@ export async function digitizeExport(document: CompileDocument): Promise<Blob> {
   return response.blob();
 }
 
+export interface ValidationIssue {
+  code: string;
+  severity: "error" | "warning";
+  message: string;
+  blockId?: string | null;
+  stitchIndex?: number | null;
+}
+
+export interface ValidationReport {
+  ok: boolean;
+  issues: ValidationIssue[];
+}
+
+export async function checkPlan(
+  plan: StitchPlan,
+  hoopWidthMm: number,
+  hoopHeightMm: number,
+): Promise<ValidationReport> {
+  const response = await fetch("/api/v1/stitch/check", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ plan, hoopWidthMm, hoopHeightMm }),
+  });
+  if (!response.ok) throw new Error(await readError(response));
+  return (await response.json()) as ValidationReport;
+}
+
 export interface VectorizeResult {
   document: CompileDocument;
   stats: { layers: number; paths: number; widthMm: number; heightMm: number };

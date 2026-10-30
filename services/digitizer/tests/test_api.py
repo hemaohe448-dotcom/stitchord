@@ -49,6 +49,18 @@ def test_validate_endpoint():
     assert response.json()["ok"] is True
 
 
+def test_check_endpoint_flags_hoop():
+    plan = sample_plan().model_dump(by_alias=True)
+    response = client.post(
+        "/v1/stitch/check",
+        json={"plan": plan, "hoopWidthMm": 10, "hoopHeightMm": 10},
+    )
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["ok"] is False
+    assert any(issue["code"] == "OUTSIDE_HOOP" for issue in body["issues"])
+
+
 def test_export_and_read_back():
     plan: StitchPlan = sample_plan()
     response = client.post(

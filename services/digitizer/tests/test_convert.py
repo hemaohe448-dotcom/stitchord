@@ -11,7 +11,7 @@ from app.models import (
     StitchStats,
     ThreadColor,
 )
-from app.validation import validate_plan
+from app.validation import validate_plan, validate_with_hoop
 
 
 def sample_plan() -> StitchPlan:
@@ -94,3 +94,16 @@ def test_validation_accepts_sample():
 def test_export_rejects_unknown_format(tmp_path):
     with pytest.raises(ValueError):
         write_stitch_file(sample_plan(), "svg")
+
+
+def test_hoop_outside_is_error():
+    report = validate_with_hoop(sample_plan(), hoop_width_mm=10, hoop_height_mm=10)
+    assert not report.ok
+    assert any(issue.code == "OUTSIDE_HOOP" for issue in report.issues)
+
+
+def test_hoop_tight_margin_is_warning():
+    # 20 x 10 mm inside a 25 x 15 mm hoop: fits, but less than 2 * 5 mm margin.
+    report = validate_with_hoop(sample_plan(), hoop_width_mm=25, hoop_height_mm=15)
+    assert report.ok
+    assert any(issue.code == "TIGHT_HOOP_MARGIN" for issue in report.issues)

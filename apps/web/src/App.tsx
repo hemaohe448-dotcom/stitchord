@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, DragEvent } from "react";
 import type { StitchPlan } from "@stitchord/contracts";
 import {
+  checkPlan,
   downloadBlob,
   digitizeDocument,
   digitizeExport,
@@ -9,6 +10,7 @@ import {
   previewStitch,
   vectorizeImage,
 } from "./api";
+import type { ValidationIssue } from "./api";
 import { StitchCanvas } from "./canvas/StitchCanvas";
 import { parseCurve } from "./curve";
 import { FABRICS } from "./sampleDoc";
@@ -16,6 +18,14 @@ import type { CompileDocument, CompileObject } from "./sampleDoc";
 import { useEditorStore } from "./store";
 
 const number = new Intl.NumberFormat("zh-CN");
+
+const HOOPS = [
+  { id: "100x100", label: "100 × 100 mm" },
+  { id: "130x180", label: "130 × 180 mm" },
+  { id: "160x260", label: "160 × 260 mm" },
+  { id: "200x200", label: "200 × 200 mm" },
+  { id: "60x120", label: "60 × 120 mm（帽框）" },
+];
 
 function sizeLabel(plan: StitchPlan): string {
   const width = plan.bounds.maxX - plan.bounds.minX;
@@ -90,6 +100,10 @@ export default function App() {
   const [maxColors, setMaxColors] = useState(8);
   const [removeBackground, setRemoveBackground] = useState(true);
   const [previewTopOnly, setPreviewTopOnly] = useState(false);
+  const [hoop, setHoop] = useState("100x100");
+  const [issues, setIssues] = useState<ValidationIssue[]>([]);
+  const [valid, setValid] = useState(true);
+  const [checking, setChecking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState("示例工程 · 正在生成针迹…");
 
@@ -124,6 +138,27 @@ export default function App() {
       window.clearTimeout(timer);
     };
   }, [doc, previewTopOnly, setPlan]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const [width, height] = hoop.split("x").map(Number);
+    setChecking(true);
+    checkPlan(plan, width, height)
+      .then((report) => {
+        if (cancelled) return;
+        setIssues(report.issues);
+        setValid(report.ok);
+      })
+      .catch(() => {
+        if (!cancelled) setValid(true);
+      })
+      .finally(() => {
+        if (!cancelled) setChecking(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [plan, hoop]);
 
   async function handleFile(file: File) {
     setBusy(true);
@@ -362,7 +397,7 @@ export default function App() {
             type="button"
             className="button primary"
             onClick={() => void onExport()}
-            disabled={busy || generating}
+            disabled={busy || generating || !valid}
           >
             导出 DST
           </button>
@@ -403,6 +438,20 @@ export default function App() {
                 disabled={!doc}
               >
                 {FABRICS.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="hoop">绣框</label>
+              <select
+                id="hoop"
+                value={hoop}
+                onChange={(event) => setHoop(event.target.value)}
+              >
+                {HOOPS.map((item) => (
                   <option key={item.id} value={item.id}>
                     {item.label}
                   </option>
@@ -720,6 +769,29 @@ export default function App() {
               ) : null}
             </section>
           ) : null}
+
+          <section>
+            <h2>工艺校验</h2>
+            <div className={`validation ${valid ? "is-ok" : "is-error"}`}>
+              {checking
+                ? "校验中…"
+                : valid
+                  ? `通过${issues.length ? `（${issues.length} 条提示）` : ""}`
+                  : "有错误，导出已禁用"}
+            </div>
+            {issues.length ? (
+              <ul className="issue-list">
+                {issues.slice(0, 8).map((issue, index) => (
+                  <li
+                    key={`${issue.code}-${index}`}
+                    className={issue.severity === "error" ? "error" : "warning"}
+                  >
+                    {issue.message}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </section>
 
           <section>
             <h2>统计</h2>

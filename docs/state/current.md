@@ -41,7 +41,7 @@
   删除、图层排序、撤销/重做、修改后 450ms 自动重编译；编辑结果可导出 DST；
 - [x] **P2 持久化**：工程文档写入 localStorage，刷新后恢复（历史/计划不持久化）；
 - [x] **P1 自引用黄金语料**：12 个文档用例 + 平移/确定性，覆盖 fill/running/satin、面料、
-  参数、三对象；3.11 全量 **47 passed**（尚缺 Inkscape 参考逐针对比）；
+  参数、三对象；3.11 全量 **50 passed**（尚缺 Inkscape 参考逐针对比）；
 - [x] **P3 基线矢量化**：`/v1/vectorize`（Pillow 量化 + VTracer + mm 缩放）→ CompileDocument；
   网页“图片矢量化”按钮；合成图 2 层/2 路径 → 2,956 针/DST 9,407 B；
   证据 `docs/research/vectorization-baseline.md`；
@@ -56,7 +56,9 @@
 - [x] **P2 预览/矢量化控制**：显示打底开关（预览用 underlay=false，导出仍用完整文档；
   实测 1440→1212 针）、矢量化颜色数 2–16、去白底开关；
 - [x] **P2 多选**：Shift+点击对象多选、整体拖拽、批量删除/复制；选中描边叠加；
-  CDP 验证：3 对象中选 2 → 复制后 5 对象，仍选中 2 个。
+  CDP 验证：3 对象中选 2 → 复制后 5 对象，仍选中 2 个；
+- [x] **生产校验**：`/v1/stitch/check`（静态规则 + 绣框适配），网页 5 种绣框预设、
+  错误时禁用导出；`OUTSIDE_HOOP` / `TIGHT_HOOP_MARGIN` 测试。
 - [x] 发现并记录：wxPython 是 import 硬依赖、必须关闭磁盘缓存、plan(px) 与 DST(0.1mm/居中) 的差异。
 
 ## 进行中

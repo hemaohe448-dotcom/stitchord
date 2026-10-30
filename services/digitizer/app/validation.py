@@ -117,3 +117,42 @@ def validate_plan(plan: StitchPlan) -> ValidationReport:
 
     ok = not any(issue.severity == "error" for issue in issues)
     return ValidationReport(ok=ok, issues=issues)
+
+
+def validate_with_hoop(
+    plan: StitchPlan,
+    hoop_width_mm: float,
+    hoop_height_mm: float,
+    margin_mm: float = 5.0,
+) -> ValidationReport:
+    """Combine static rules with a hoop fit check (design is centred by the writer)."""
+    base = validate_plan(plan)
+    issues = list(base.issues)
+
+    width = plan.bounds.max_x - plan.bounds.min_x
+    height = plan.bounds.max_y - plan.bounds.min_y
+    if width > hoop_width_mm or height > hoop_height_mm:
+        issues.append(
+            ValidationIssue(
+                code="OUTSIDE_HOOP",
+                severity="error",
+                message=(
+                    f"图案 {width:.1f}×{height:.1f} mm 超出绣框 "
+                    f"{hoop_width_mm:.0f}×{hoop_height_mm:.0f} mm，需要分框或缩小"
+                ),
+            )
+        )
+    elif width > hoop_width_mm - margin_mm * 2 or height > hoop_height_mm - margin_mm * 2:
+        issues.append(
+            ValidationIssue(
+                code="TIGHT_HOOP_MARGIN",
+                severity="warning",
+                message=(
+                    f"图案 {width:.1f}×{height:.1f} mm 距绣框边不足 {margin_mm:.0f} mm，"
+                    "夹持与走针空间偏小"
+                ),
+            )
+        )
+
+    ok = not any(issue.severity == "error" for issue in issues)
+    return ValidationReport(ok=ok, issues=issues)

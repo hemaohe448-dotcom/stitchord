@@ -439,6 +439,52 @@ button {
   padding-bottom: 6px;
 }
 
+.validation {
+  border-radius: 7px;
+  padding: 7px 9px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+}
+
+.validation.is-ok {
+  background: #10241a;
+  border-color: #276749;
+  color: #c6f6d5;
+}
+
+.validation.is-error {
+  background: #2a1418;
+  border-color: #7b2d36;
+  color: #fed7d7;
+}
+
+.issue-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.issue-list li {
+  padding-left: 8px;
+  border-left: 2px solid var(--border);
+  color: var(--muted);
+}
+
+.issue-list li.error {
+  border-left-color: var(--danger);
+  color: #fed7d7;
+}
+
+.issue-list li.warning {
+  border-left-color: var(--accent);
+  color: #fefcbf;
+}
+
 .stage {
   position: relative;
   min-width: 0;
