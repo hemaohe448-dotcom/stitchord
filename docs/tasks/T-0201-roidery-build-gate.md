@@ -20,6 +20,8 @@
 
 - Roidery commit `0187f73daf2b5b05ff9e88cacc8c972c6abb9687`
 - workflow：`.github/workflows/roidery-build-gate.yml`
+- 人工操作手册：`docs/07-github-actions-guide.md`
+- 结果回填表：`docs/reviews/roidery-build-result.md`
 
 ## 验收标准
 

@@ -55,6 +55,7 @@ Windows PowerShell 下可参考 [`docs/06-dev-setup.md`](docs/06-dev-setup.md)�
 | [04 智能体协作手册](docs/04-agent-playbook.md) | 分工、交接、防幻觉、上下文治理 |
 | [05 生产质量](docs/05-production-quality.md) | 工业上机要求、验证矩阵、测试缝合 |
 | [06 开发环境](docs/06-dev-setup.md) | Windows / 代理 / 依赖安装 |
+| [07 GitHub Actions 操作手册](docs/07-github-actions-guide.md) | 小白版：上传仓库、手动跑构建、取结果 |
 | [参数依据](docs/reference/parameters.md) | Ink/Stitch + Wilcom + Roidery 的密度/补偿/打底 |
 | [ADRs](docs/adr/) | 关键决策记录 |
 
