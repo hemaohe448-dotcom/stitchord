@@ -171,6 +171,20 @@ export async function saveProject(
   return (await response.json()) as ProjectSummary;
 }
 
+export async function updateProject(
+  id: string,
+  name: string,
+  document: CompileDocument,
+): Promise<ProjectSummary> {
+  const response = await fetch(`/api/v1/projects/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, document }),
+  });
+  if (!response.ok) throw new Error(await readError(response));
+  return (await response.json()) as ProjectSummary;
+}
+
 export async function loadProject(id: string): Promise<{
   id: string;
   name: string;

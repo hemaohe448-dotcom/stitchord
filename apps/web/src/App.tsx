@@ -14,6 +14,7 @@ import {
   loadProject,
   previewStitch,
   saveProject,
+  updateProject,
   vectorizeImage,
 } from "./api";
 import type { ProjectSummary, ValidationIssue } from "./api";
@@ -127,6 +128,7 @@ export default function App() {
   const [playSpeed, setPlaySpeed] = useState(240);
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [showProjects, setShowProjects] = useState(false);
+  const [serverProjectId, setServerProjectId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState("示例工程 · 正在生成针迹…");
 
@@ -232,7 +234,10 @@ export default function App() {
     try {
       const name =
         doc.name?.trim() || `工程 ${new Date().toLocaleString("zh-CN")}`;
-      const saved = await saveProject(name, doc);
+      const saved = serverProjectId
+        ? await updateProject(serverProjectId, name, doc)
+        : await saveProject(name, doc);
+      setServerProjectId(saved.id);
       setNotice(`已保存到服务器 · ${saved.name}`);
       setProjects(await listProjects());
       setShowProjects(true);
@@ -257,6 +262,7 @@ export default function App() {
     try {
       const project = await loadProject(id);
       setDoc(project.document);
+      setServerProjectId(project.id);
       setNotice(`已从服务器打开 · ${project.name}`);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
@@ -277,6 +283,7 @@ export default function App() {
   async function handleFile(file: File) {
     setBusy(true);
     setError(null);
+    setServerProjectId(null);
     try {
       if (file.name.toLowerCase().endsWith(".svg")) {
         const result = await importSvg(file, 100);
@@ -306,6 +313,7 @@ export default function App() {
   async function handleImage(file: File) {
     setBusy(true);
     setError(null);
+    setServerProjectId(null);
     try {
       const detail =
         vectorDetail === "high"
@@ -358,6 +366,7 @@ export default function App() {
         throw new Error("不是有效的 Stitchord 工程文件");
       }
       setDoc(parsed);
+      setServerProjectId(null);
       setNotice(`${file.name} · 已打开工程`);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
@@ -755,7 +764,10 @@ export default function App() {
               <button
                 type="button"
                 className="button"
-                onClick={newSample}
+                onClick={() => {
+                  setServerProjectId(null);
+                  newSample();
+                }}
                 disabled={busy}
               >
                 新建示例
