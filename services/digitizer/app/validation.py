@@ -17,6 +17,10 @@ MAX_STITCH_MM = 12.1
 MIN_STITCH_MM = 0.5
 # 单色块针数上限的告警阈值（经验值，后续按机型配置）。
 WARN_BLOCK_STITCHES = 50_000
+# 跳针/剪线/换色过多的经验阈值，先作为 warning，不阻塞导出。
+WARN_JUMP_RATIO = 0.25
+WARN_TRIMS = 500
+WARN_COLOR_BLOCKS = 16
 
 
 def _dist(a, b) -> float:
@@ -72,6 +76,8 @@ def validate_plan(plan: StitchPlan) -> ValidationReport:
         return ValidationReport(ok=False, issues=issues)
 
     total = 0
+    jump_count = 0
+    trim_count = 0
     for block in plan.color_blocks:
         if not block.stitches:
             issues.append(
@@ -120,6 +126,16 @@ def validate_plan(plan: StitchPlan) -> ValidationReport:
                             stitch_index=index,
                         )
                     )
+                if stitch.command == "JUMP" and distance > MAX_STITCH_MM:
+                    issues.append(
+                        ValidationIssue(
+                            code="JUMP_TOO_LONG",
+                            severity="warning",
+                            message=f"跳针 {distance:.2f} mm 超过 {MAX_STITCH_MM} mm，writer 可能需要拆分",
+                            block_id=block.id,
+                            stitch_index=index,
+                        )
+                    )
                 if stitch.command == "STITCH" and 0 < distance < MIN_STITCH_MM:
                     issues.append(
                         ValidationIssue(
@@ -142,6 +158,10 @@ def validate_plan(plan: StitchPlan) -> ValidationReport:
                     )
             if stitch.command in ("STITCH", "JUMP"):
                 previous = stitch
+            if stitch.command == "JUMP":
+                jump_count += 1
+            elif stitch.command == "TRIM":
+                trim_count += 1
 
     bounds = computed_bounds(plan)
     if bounds is None:
@@ -169,6 +189,37 @@ def validate_plan(plan: StitchPlan) -> ValidationReport:
                 code="NO_STITCHES",
                 severity="error",
                 message="没有实际针迹",
+            )
+        )
+
+    stitch_count = sum(
+        1
+        for block in plan.color_blocks
+        for stitch in block.stitches
+        if stitch.command == "STITCH"
+    )
+    if stitch_count and jump_count > max(50, stitch_count * WARN_JUMP_RATIO):
+        issues.append(
+            ValidationIssue(
+                code="JUMP_RATIO_HIGH",
+                severity="warning",
+                message=f"跳针 {jump_count} 次，相对 {stitch_count} 针偏高，建议检查路径/分色",
+            )
+        )
+    if trim_count > WARN_TRIMS:
+        issues.append(
+            ValidationIssue(
+                code="TOO_MANY_TRIMS",
+                severity="warning",
+                message=f"剪线 {trim_count} 次，建议合并路径或调整顺序",
+            )
+        )
+    if len(plan.color_blocks) > WARN_COLOR_BLOCKS:
+        issues.append(
+            ValidationIssue(
+                code="TOO_MANY_COLOR_BLOCKS",
+                severity="warning",
+                message=f"{len(plan.color_blocks)} 个色块，换色/装夹成本高",
             )
         )
 

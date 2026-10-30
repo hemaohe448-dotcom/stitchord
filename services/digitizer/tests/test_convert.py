@@ -134,3 +134,10 @@ def test_stats_are_recomputed():
     assert stats.stitch_count == sum(
         1 for block in plan.color_blocks for stitch in block.stitches if stitch.command == "STITCH"
     )
+
+
+def test_long_jump_is_warned():
+    plan = sample_plan().model_copy(deep=True)
+    plan.color_blocks[0].stitches.append(Stitch(x=100, y=100, command="JUMP"))
+    report = validate_plan(plan)
+    assert any(issue.code == "JUMP_TOO_LONG" for issue in report.issues)

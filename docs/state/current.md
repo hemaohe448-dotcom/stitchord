@@ -13,7 +13,7 @@
 - [x] 多智能体协作/防幻觉/上下文规范；
 - [x] 前端骨架：DST/PES 导入 → StitchPlan → Canvas 渲染 → 导出 DST；
 - [x] 后端骨架：预览 / 校验 / 导出 API；
-- [x] 测试：前端 17 个单测 + 7 条 Playwright E2E，后端 75 个单测/契约测试（3.11 全量）；
+- [x] 测试：前端 17 个单测 + 7 条 Playwright E2E，后端 76 个单测/契约测试（3.11 全量）；
 - [x] 构建：`tsc --noEmit`、`vite build` 通过；
 - [x] Claude 独立架构评审（`docs/reviews/2026-10-30-architecture-review.md`），阻断项已处置
   （`docs/reviews/2026-10-30-response.md`）；
@@ -41,7 +41,7 @@
   删除、图层排序、撤销/重做、修改后 450ms 自动重编译；编辑结果可导出 DST；
 - [x] **P2 持久化**：工程文档写入 localStorage，刷新后恢复（历史/计划不持久化）；
 - [x] **P1 自引用黄金语料**：12 个文档用例 + 平移/确定性，覆盖 fill/running/satin、面料、
-  参数、三对象；3.11 全量 **75 passed**（尚缺 Inkscape 参考逐针对比）；
+  参数、三对象；3.11 全量 **76 passed**（尚缺 Inkscape 参考逐针对比）；
 - [x] **P3 基线矢量化**：`/v1/vectorize`（Pillow 量化 + VTracer + mm 缩放）→ CompileDocument；
   网页“图片矢量化”按钮；合成图 2 层/2 路径 → 2,956 针/DST 9,407 B；
   现已支持颜色数 2–16、去白底（边缘洪泛填充，兼容非白背景）、
@@ -81,6 +81,8 @@
 - [x] **对象级隐藏/锁定**：隐藏对象不参与编译，锁定对象不可在画布选中/拖动/节点编辑；
   编译器有 hidden 回归测试；
 - [x] **针法参数面板扩展**：running 针距/线宽，satin 密度/拉布补偿，fill/satin 打底开关；
+- [x] **上机规则扩展**：跳针过长、跳针比例过高、剪线过多、色块过多均给出 warning；
+  不阻塞导出，交由制版师判断。
 - [x] **worker 镜像 CI 入口**：新增 `.github/workflows/worker-image.yml`（手动触发）：
   构建 Dockerfile → 起容器 → `/health` → `/v1/digitize` 冒烟；冒烟脚本已在本机 API
   验证（2,564 针 / 2 色块），**镜像本身尚未构建**。
