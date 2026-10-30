@@ -37,6 +37,7 @@
 | Python | 3.11.18 | conda-forge，`.condaenv` |
 | inkex | `a887f9d4c8adacd62786e4f46c8ef1467bedc1df` | `CapellanCitizen/extensions` |
 | wxPython | 4.3.2 | import 链必需（非 GUI 使用） |
+| wxPython（Linux 镜像） | 4.2.5 | 4.3.2 无 Linux wheel；Ubuntu 24.04 extras wheel，待构建验证 |
 | pystitch | 1.0.1 | Ink/Stitch 的 IO 层 |
 | shapely | 2.2.0 | 几何 |
 | numpy | 2.2.6 | 固定版本 |

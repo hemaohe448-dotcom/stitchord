@@ -88,7 +88,8 @@
   不阻塞导出，交由制版师判断。
 - [x] **worker 镜像 CI 入口**：新增 `.github/workflows/worker-image.yml`（手动触发）：
   构建 Dockerfile → 起容器 → `/health` → `/v1/digitize` 冒烟；冒烟脚本已在本机 API
-  验证（2,564 针 / 2 色块），**镜像本身尚未构建**。
+  验证（2,564 针 / 2 色块）；GitHub run 失败于 `Build image`，
+  **初步判定为 Linux 无 wxPython 4.3.2 wheel，已改用 4.2.5，待重跑验证**。
 - [x] **ADR-0006 用户决策**：选 **A**——自研编辑器优先，Roidery 仅评估，不替换运行时。
 - [x] **ADR-0006 门槛通过（2026-10-30）**：CI 成功构建 `vectorcraft-cli`（15m 10s，
   DST 4,721 B）；仅证明可构建/最小导出，T-0202 静态评估中。
