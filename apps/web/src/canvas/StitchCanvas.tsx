@@ -14,6 +14,7 @@ interface StitchCanvasProps {
   selectedIds: string[];
   nodeMode: boolean;
   drawMode: boolean;
+  activeStitch: { x: number; y: number; color: string } | null;
   onSelect: (id: string | null, additive?: boolean) => void;
   onMoveMany: (
     entries: Array<{ id: string; value: [number, number] }>,
@@ -101,6 +102,7 @@ export function StitchCanvas({
   selectedIds,
   nodeMode,
   drawMode,
+  activeStitch,
   onSelect,
   onMoveMany,
   onPath,
@@ -258,6 +260,17 @@ export function StitchCanvas({
       ctx.fill();
     }
 
+    if (activeStitch) {
+      const point = toScreen(activeStitch.x, activeStitch.y, viewport);
+      ctx.fillStyle = activeStitch.color;
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+
     if (doc && selectedIds.length) {
       ctx.strokeStyle = "#f6ad55";
       ctx.lineWidth = 1.5;
@@ -327,7 +340,7 @@ export function StitchCanvas({
       ctx.stroke();
       ctx.setLineDash([]);
     }
-  }, [plan, hidden, showJumps, viewport, size, doc, selectedId, selectedIds, nodeMode, drawPoints]);
+  }, [plan, hidden, showJumps, viewport, size, doc, selectedId, selectedIds, nodeMode, drawPoints, activeStitch]);
 
   useEffect(() => {
     const canvas = canvasRef.current;

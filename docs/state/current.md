@@ -71,7 +71,8 @@
 - [x] **服务端权威校验**：边界/统计从实际针迹重算，拒绝 NaN/Infinity；
   `/v1/digitize/export` 也执行绣框校验（越框 422）；前端校验失败时 fail-closed；
 - [x] **请求安全**：可选 `X-API-Key`、每分钟限流、20 MB body cap、编译串行锁、
-  SVG 拒绝 DTD/ENTITY/script、矢量化先缩图再处理。
+  SVG 拒绝 DTD/ENTITY/script、矢量化先缩图再处理；
+- [x] **针迹播放**：播放/暂停、进度条、慢/中/快、当前针高亮；仅前端，构建通过。
 - [x] 发现并记录：wxPython 是 import 硬依赖、必须关闭磁盘缓存、plan(px) 与 DST(0.1mm/居中) 的差异。
 
 ## 进行中

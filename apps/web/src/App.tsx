@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, DragEvent } from "react";
 import type { ExportFormat, StitchPlan } from "@stitchord/contracts";
 import {
@@ -110,6 +110,9 @@ export default function App() {
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
   const [valid, setValid] = useState(true);
   const [checking, setChecking] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [playIndex, setPlayIndex] = useState(0);
+  const [playSpeed, setPlaySpeed] = useState(240);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState("示例工程 · 正在生成针迹…");
 
@@ -117,6 +120,39 @@ export default function App() {
     ? allObjects(doc.layers).find((obj) => obj.id === selectedId)
     : undefined;
   const selectedCurve = selected ? parseCurve(selected.pathD) : null;
+  const stitches = useMemo(
+    () =>
+      plan.colorBlocks.flatMap((block) =>
+        block.stitches
+          .filter((stitch) => stitch.command === "STITCH")
+          .map((stitch) => ({ x: stitch.x, y: stitch.y, color: block.color.hex })),
+      ),
+    [plan],
+  );
+
+  useEffect(() => {
+    setPlaying(false);
+    setPlayIndex(0);
+  }, [plan]);
+
+  useEffect(() => {
+    if (!playing || stitches.length === 0) return;
+    const step = Math.max(1, Math.round(playSpeed / 60));
+    const timer = window.setInterval(() => {
+      setPlayIndex((current) =>
+        Math.min(current + step, stitches.length - 1),
+      );
+    }, 16);
+    return () => window.clearInterval(timer);
+  }, [playing, playSpeed, stitches.length]);
+
+  useEffect(() => {
+    if (playing && stitches.length > 0 && playIndex >= stitches.length - 1) {
+      setPlaying(false);
+    }
+  }, [playing, playIndex, stitches.length]);
+
+  const activeStitch = stitches[playIndex] ?? null;
 
   useEffect(() => {
     if (!doc) return;
@@ -901,6 +937,44 @@ export default function App() {
 
           <section>
             <h2>显示</h2>
+            <div className="playback">
+              <button
+                type="button"
+                className="button"
+                onClick={() => {
+                  if (stitches.length === 0) return;
+                  if (!playing && playIndex >= stitches.length - 1) {
+                    setPlayIndex(0);
+                  }
+                  setPlaying((value) => !value);
+                }}
+                disabled={!stitches.length}
+              >
+                {playing ? "暂停" : "播放"}
+              </button>
+              <input
+                type="range"
+                min="0"
+                max={Math.max(stitches.length - 1, 0)}
+                value={Math.min(playIndex, Math.max(stitches.length - 1, 0))}
+                onChange={(event) => {
+                  setPlaying(false);
+                  setPlayIndex(Number(event.target.value));
+                }}
+              />
+              <select
+                value={playSpeed}
+                onChange={(event) => setPlaySpeed(Number(event.target.value))}
+                aria-label="播放速度"
+              >
+                <option value={60}>慢</option>
+                <option value={240}>中</option>
+                <option value={600}>快</option>
+              </select>
+              <span className="playback-count">
+                {stitches.length ? playIndex + 1 : 0}/{stitches.length}
+              </span>
+            </div>
             <label className="toggle">
               <input
                 type="checkbox"
@@ -939,6 +1013,7 @@ export default function App() {
             selectedIds={selectedIds}
             nodeMode={nodeMode}
             drawMode={drawMode}
+            activeStitch={activeStitch}
             onSelect={select}
             onMoveMany={setTranslations}
             onPath={setPath}
