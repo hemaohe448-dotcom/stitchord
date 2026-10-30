@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, DragEvent } from "react";
-import type { StitchPlan } from "@stitchord/contracts";
+import type { ExportFormat, StitchPlan } from "@stitchord/contracts";
 import {
   checkPlan,
   downloadBlob,
@@ -26,6 +26,8 @@ const HOOPS = [
   { id: "200x200", label: "200 × 200 mm" },
   { id: "60x120", label: "60 × 120 mm（帽框）" },
 ];
+
+const FORMATS: ExportFormat[] = ["dst", "pes", "jef", "exp", "vp3", "xxx"];
 
 function sizeLabel(plan: StitchPlan): string {
   const width = plan.bounds.maxX - plan.bounds.minX;
@@ -101,6 +103,7 @@ export default function App() {
   const [removeBackground, setRemoveBackground] = useState(true);
   const [previewTopOnly, setPreviewTopOnly] = useState(false);
   const [hoop, setHoop] = useState("100x100");
+  const [format, setFormat] = useState<ExportFormat>("dst");
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
   const [valid, setValid] = useState(true);
   const [checking, setChecking] = useState(false);
@@ -319,10 +322,12 @@ export default function App() {
     setError(null);
     try {
       const blob = doc
-        ? await digitizeExport(doc)
-        : await exportStitch(plan, "dst");
-      downloadBlob(blob, `stitchord-${Date.now()}.dst`);
-      setNotice(doc ? "已导出 DST（Ink/Stitch）" : "已导出 DST（经服务端校验）");
+        ? await digitizeExport(doc, format)
+        : await exportStitch(plan, format);
+      downloadBlob(blob, `stitchord-${Date.now()}.${format}`);
+      setNotice(
+        `已导出 ${format.toUpperCase()}（${doc ? "Ink/Stitch" : "计划导出"}）`,
+      );
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
@@ -454,6 +459,22 @@ export default function App() {
                 {HOOPS.map((item) => (
                   <option key={item.id} value={item.id}>
                     {item.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="format">导出格式</label>
+              <select
+                id="format"
+                value={format}
+                onChange={(event) =>
+                  setFormat(event.target.value as ExportFormat)
+                }
+              >
+                {FORMATS.map((item) => (
+                  <option key={item} value={item}>
+                    {item.toUpperCase()}
                   </option>
                 ))}
               </select>

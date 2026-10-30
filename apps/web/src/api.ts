@@ -60,8 +60,11 @@ export async function digitizeDocument(
   return data;
 }
 
-export async function digitizeExport(document: CompileDocument): Promise<Blob> {
-  const response = await fetch("/api/v1/digitize/export", {
+export async function digitizeExport(
+  document: CompileDocument,
+  format: ExportFormat = "dst",
+): Promise<Blob> {
+  const response = await fetch(`/api/v1/digitize/export?format=${format}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(document),

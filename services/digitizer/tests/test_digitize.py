@@ -90,6 +90,18 @@ def test_plan_stitch_count_close_to_dst(tmp_path):
 
 
 @needs_inkstitch
+def test_digitize_export_pes(tmp_path):
+    response = client.post("/v1/digitize/export?format=pes", json=DOCUMENT)
+    assert response.status_code == 200, response.text
+    assert response.headers["X-Stitch-Format"] == "pes"
+    path = tmp_path / "out.pes"
+    path.write_bytes(response.content)
+    pattern = pyembroidery.read(str(path))
+    assert len(pattern.stitches) > 1000
+    assert len(pattern.threadlist) >= 2
+
+
+@needs_inkstitch
 def test_unknown_fabric_returns_422():
     document = dict(DOCUMENT)
     document["fabric"] = "silk"

@@ -6,6 +6,7 @@ import os
 import shutil
 import tempfile
 from pathlib import Path
+from typing import Literal
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -139,7 +140,7 @@ def vectorize(
     }
 
 
-def _digitize_document(document: CompileDocument):
+def _digitize_document(document: CompileDocument, suffix: str = "dst"):
     if not inkstitch_adapter.available():
         raise HTTPException(
             status_code=503,
@@ -151,7 +152,9 @@ def _digitize_document(document: CompileDocument):
         work_dir = Path(tempfile.mkdtemp(prefix="stitchord-digitize-"))
         svg_path = work_dir / "design.svg"
         svg_path.write_text(svg, encoding="utf-8")
-        return inkstitch_adapter.digitize_svg(svg_path, work_dir / "design.dst")
+        return inkstitch_adapter.digitize_svg(
+            svg_path, work_dir / f"design.{suffix}"
+        )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     finally:
@@ -166,14 +169,18 @@ def digitize(document: CompileDocument) -> StitchPlan:
 
 
 @app.post("/v1/digitize/export")
-def digitize_export(document: CompileDocument) -> Response:
-    result = _digitize_document(document)
+def digitize_export(
+    document: CompileDocument,
+    format: Literal["dst", "pes", "jef", "exp", "vp3", "xxx"] = "dst",
+) -> Response:
+    result = _digitize_document(document, suffix=format)
     return Response(
         content=result.dst,
         media_type="application/octet-stream",
         headers={
-            "Content-Disposition": 'attachment; filename="stitchord.dst"',
+            "Content-Disposition": f'attachment; filename="stitchord.{format}"',
             "X-Stitch-Sha256": result.sha256,
+            "X-Stitch-Format": format,
         },
     )
 
