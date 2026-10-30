@@ -19,8 +19,8 @@ __pycache__/
 .env.*
 !.env.example
 
-# research clones (external code, never committed)
-.research/repos/
+# research clones and fetched docs (external, never committed)
+.research/
 
 # local tooling / caches
 .pylibs/

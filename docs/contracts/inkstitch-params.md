@@ -23,7 +23,12 @@
 | `stitch.type=running` | `style="fill:none;stroke:#...;stroke-width:<mm>"` | SVG style | width 0.4 mm | 端到端 `Stroke`、39 针 | ✅ 已验证 |
 | `stitch.rowSpacingMm` | `inkstitch:row_spacing_mm` | float, mm | 0.25 | `fill_stitch.py:379` | ✅ 实测：0.25→1956 针，0.5→1012 针（40×30 mm） |
 | `stitch.angleDeg` | `inkstitch:angle` | float, 度 | 0 | `fill_stitch.py:310` | ⚠️ 已编译，未做几何对比 |
-| `stitch.underlay` | `inkstitch:fill_underlay` | bool | true | `fill_stitch.py:684` | ⚠️ 已编译，未做几何对比 |
+| `stitch.underlay` | `inkstitch:fill_underlay` | bool | true | `fill_stitch.py:684` | ⚠️ 已编译，未单独做几何对比 |
+| `stitch.pullCompensationMm` | `inkstitch:pull_compensation_mm` | mm | 0 | `fill_stitch.py:664` | ✅ 实测：woven 0.20 vs knit 0.30 包围盒变化 |
+| `stitch.underlaySpacingMm` | `inkstitch:fill_underlay_row_spacing_mm` | mm | row×3 | `fill_stitch.py:722` | ✅ 实测：knit 2.0 针数 1432 |
+| `stitch.maxStitchLengthMm` | `inkstitch:max_stitch_length_mm` | mm | 4.0 | `fill_stitch.py:361` | ⚠️ 已编译，未单独对比 |
+| `satin.densityMm` | `inkstitch:zigzag_spacing_mm` | mm | — | `satin_column/satin_column.py:199` | ✅ 实测：woven 243 vs knit 343 针 |
+| `satin.heavyUnderlay` | `inkstitch:contour_underlay` + `zigzag_underlay` + insets | bool | — | `satin_column/underlay.py` | ✅ 实测：重打底增加 100 针 |
 
 ## 2. 已提取、尚未接入
 

@@ -91,6 +91,42 @@ def test_compile_satin_marks_column():
     assert "fill:none;stroke:#c0392b" in svg
 
 
+def test_fabric_preset_fills_defaults():
+    doc = sample_document()
+    doc.fabric = "knit"
+    svg = compile_svg(doc)
+    assert 'inkstitch:row_spacing_mm="0.42"' in svg
+    assert 'inkstitch:pull_compensation_mm="0.3"' in svg
+    assert 'inkstitch:max_stitch_length_mm="3"' in svg
+    assert 'inkstitch:fill_underlay_row_spacing_mm="2"' in svg
+
+
+def test_explicit_value_overrides_fabric():
+    doc = sample_document()
+    doc.fabric = "knit"
+    doc.layers[0].objects[0].stitch = CompileStitch(type="fill", row_spacing_mm=0.6)
+    svg = compile_svg(doc)
+    assert 'inkstitch:row_spacing_mm="0.6"' in svg
+
+
+def test_satin_fabric_underlay():
+    doc = sample_document()
+    doc.fabric = "knit"
+    doc.layers[0].objects[0].path_d = "M 10,10 L 10,50 M 30,10 L 30,50"
+    doc.layers[0].objects[0].stitch = CompileStitch(type="satin")
+    svg = compile_svg(doc)
+    assert 'inkstitch:zigzag_spacing_mm="0.42"' in svg
+    assert 'inkstitch:contour_underlay="true"' in svg
+    assert 'inkstitch:zigzag_underlay="true"' in svg
+
+
+def test_unknown_fabric_rejected():
+    doc = sample_document()
+    doc.fabric = "silk"
+    with pytest.raises(ValueError):
+        compile_svg(doc)
+
+
 def test_compile_rejects_script_in_path():
     doc = sample_document()
     doc.layers[0].objects[0].path_d = 'M 0,0"/><script>alert(1)</script>'

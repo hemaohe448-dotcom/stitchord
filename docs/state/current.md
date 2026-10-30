@@ -28,14 +28,19 @@
   `type: running` 生成 `Stroke`/39 针；参数映射表 `docs/contracts/inkstitch-params.md`；
 - [x] **P1 satin + PES**：双轨线 `satin` 生成 `SatinColumn`/210 针；同一文档导出 PES
   （22,326 B / 2 色块 / Brother 线色匹配）；
+- [x] **需求确认**：Roidery = `lork-fork/Roidery`（MIT/Apache，Rust/VectorCraft）；
+  GPL 已接受（仅服务端调用）；ADR-0001 更新；
+- [x] **面料参数预设**：8 种面料（Roidery 数值 + Wilcom 规则 + Ink/Stitch 语义）
+  落到 `services/digitizer/app/fabric.py`；实测 woven/knit 的填充与缎面差异；
+  依据 `docs/reference/parameters.md`；ADR-0006 记录 Roidery 定位。
 - [x] 发现并记录：wxPython 是 import 硬依赖、必须关闭磁盘缓存、plan(px) 与 DST(0.1mm/居中) 的差异。
 
 ## 进行中
 
 - [ ] P1 worker 镜像（Linux + wx/GTK + 固定 commit）与 12 份黄金语料；
-- [ ] 参数映射（fill angle/row spacing/underlay/pull comp 等）与 satin/running；
-- [ ] 把评审修正提交（DST 12.1 mm、wx 依赖、GPL 措辞、契约测试口径）；
-- [ ] 用户确认：Roidery 是什么、GPL 商业边界、目标机型。
+- [ ] P1 收尾：解释 plan 3490 vs DST 3489 的 1 针差异；性能与错误输入；
+- [ ] ADR-0006 的 Phase 2 门槛：在 CI 构建 Roidery `vectorcraft-cli` 并跑 SVG→DST；
+- [ ] P2 编辑器：文档模型、图层/对象参数、命令栈（或 Roidery 内核接入）。
 
 ## 下一步（按优先级）
 

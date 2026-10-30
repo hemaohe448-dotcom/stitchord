@@ -47,9 +47,10 @@
 **目标**：证明“我们的 JSON → SVG → Ink/Stitch → DST + StitchPlan”在无 Inkscape GUI 的容器里稳定成立。
 
 **进展（2026-10-30）**：库调用路径已跑通（无 Inkscape、需 wxPython、输出确定），
-并完成 CompileDocument(mm) → SVG(px) → plan/DST 端到端（2 色块/3490 针）。
-详见 `docs/research/inkstitch-headless.md` 与 `docs/contracts/compile-document.md`；
-剩余：绣法覆盖、参数映射、黄金语料、Linux 镜像。
+完成 CompileDocument(mm) → SVG(px) → plan/DST 端到端（2 色块/3490 针），
+fill/running/satin + PES，面料预设（woven/knit 实测差异）。
+详见 `docs/research/inkstitch-headless.md`、`docs/contracts/compile-document.md`、
+`docs/reference/parameters.md`；剩余：黄金语料、Linux 镜像、1 针差异。
 
 **交付物**
 

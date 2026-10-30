@@ -13,6 +13,7 @@ from typing import Literal
 
 from pydantic import Field
 
+from .fabric import get_fabric
 from .models import ContractModel, ThreadColor
 
 PX_PER_MM = 96 / 25.4
@@ -26,6 +27,11 @@ class CompileStitch(ContractModel):
     row_spacing_mm: float | None = Field(default=None, ge=0.1, le=2.0)
     underlay: bool | None = None
     running_width_mm: float = Field(default=0.4, ge=0.1, le=2.0)
+    pull_compensation_mm: float | None = Field(default=None, ge=0.0, le=2.0)
+    max_stitch_length_mm: float | None = Field(default=None, ge=0.5, le=12.0)
+    underlay_spacing_mm: float | None = Field(default=None, ge=0.5, le=10.0)
+    satin_density_mm: float | None = Field(default=None, ge=0.2, le=1.5)
+    satin_heavy_underlay: bool | None = None
 
 
 class CompileObject(ContractModel):
@@ -44,6 +50,7 @@ class CompileLayer(ContractModel):
 class CompileDocument(ContractModel):
     width_mm: float = 100.0
     height_mm: float = 100.0
+    fabric: str | None = None
     layers: list[CompileLayer]
 
 
@@ -84,14 +91,15 @@ def compile_svg(doc: CompileDocument) -> str:
     for layer in doc.layers:
         parts.append(f'<g id="{layer.id}">')
         for obj in layer.objects:
-            if obj.stitch.type in ("running", "satin"):
+            stitch = _resolve_stitch(obj.stitch, doc.fabric)
+            if stitch.type in ("running", "satin"):
                 style = (
                     f"fill:none;stroke:{obj.color.hex};"
-                    f"stroke-width:{obj.stitch.running_width_mm:g}"
+                    f"stroke-width:{stitch.running_width_mm:g}"
                 )
             else:
                 style = f"fill:{obj.color.hex};stroke:none"
-            params = _stitch_attributes(obj.stitch)
+            params = _stitch_attributes(stitch)
             parts.append(
                 f'<path id="{obj.id}" d="{obj.path_d}" style="{style}"{params}/>'
             )
@@ -101,6 +109,34 @@ def compile_svg(doc: CompileDocument) -> str:
     return "\n".join(parts) + "\n"
 
 
+def _resolve_stitch(stitch: CompileStitch, fabric_id: str | None) -> CompileStitch:
+    """Apply fabric preset defaults to unset fields (explicit values win)."""
+    fabric = get_fabric(fabric_id)
+    if fabric is None:
+        return stitch
+
+    updates: dict[str, object] = {}
+    if stitch.type == "fill":
+        if stitch.row_spacing_mm is None:
+            updates["row_spacing_mm"] = fabric.fill_row_spacing_mm
+        if stitch.pull_compensation_mm is None:
+            updates["pull_compensation_mm"] = fabric.pull_compensation_mm
+        if stitch.max_stitch_length_mm is None:
+            updates["max_stitch_length_mm"] = fabric.fill_stitch_length_mm
+        if stitch.underlay is None:
+            updates["underlay"] = True
+        if stitch.underlay_spacing_mm is None:
+            updates["underlay_spacing_mm"] = fabric.fill_underlay_spacing_mm
+    elif stitch.type == "satin":
+        if stitch.satin_density_mm is None:
+            updates["satin_density_mm"] = fabric.satin_density_mm
+        if stitch.pull_compensation_mm is None:
+            updates["pull_compensation_mm"] = fabric.pull_compensation_mm
+        if stitch.satin_heavy_underlay is None:
+            updates["satin_heavy_underlay"] = fabric.heavy_underlay
+    return stitch.model_copy(update=updates)
+
+
 def _stitch_attributes(stitch: CompileStitch) -> str:
     """Ink/Stitch namespaced params; names/units verified against source (P1)."""
     attributes: list[str] = []
@@ -108,9 +144,39 @@ def _stitch_attributes(stitch: CompileStitch) -> str:
         attributes.append('inkstitch:satin_column="true"')
     if stitch.angle_deg is not None:
         attributes.append(f'inkstitch:angle="{stitch.angle_deg:g}"')
-    if stitch.row_spacing_mm is not None:
-        attributes.append(f'inkstitch:row_spacing_mm="{stitch.row_spacing_mm:g}"')
-    if stitch.underlay is not None:
-        value = "true" if stitch.underlay else "false"
-        attributes.append(f'inkstitch:fill_underlay="{value}"')
+    if stitch.type == "fill":
+        if stitch.row_spacing_mm is not None:
+            attributes.append(f'inkstitch:row_spacing_mm="{stitch.row_spacing_mm:g}"')
+        if stitch.max_stitch_length_mm is not None:
+            attributes.append(
+                f'inkstitch:max_stitch_length_mm="{stitch.max_stitch_length_mm:g}"'
+            )
+        if stitch.underlay is not None:
+            attributes.append(
+                f'inkstitch:fill_underlay="{"true" if stitch.underlay else "false"}"'
+            )
+        if stitch.underlay_spacing_mm is not None:
+            attributes.append(
+                f'inkstitch:fill_underlay_row_spacing_mm="{stitch.underlay_spacing_mm:g}"'
+            )
+    if stitch.type == "satin":
+        if stitch.satin_density_mm is not None:
+            attributes.append(
+                f'inkstitch:zigzag_spacing_mm="{stitch.satin_density_mm:g}"'
+            )
+        if stitch.satin_heavy_underlay:
+            attributes.extend(
+                [
+                    'inkstitch:contour_underlay="true"',
+                    'inkstitch:contour_underlay_inset_mm="0.4"',
+                    'inkstitch:zigzag_underlay="true"',
+                    'inkstitch:zigzag_underlay_spacing_mm="2"',
+                ]
+            )
+        elif stitch.satin_heavy_underlay is False:
+            attributes.append('inkstitch:center_walk_underlay="true"')
+    if stitch.pull_compensation_mm is not None and stitch.type in ("fill", "satin"):
+        attributes.append(
+            f'inkstitch:pull_compensation_mm="{stitch.pull_compensation_mm:g}"'
+        )
     return (" " + " ".join(attributes)) if attributes else ""

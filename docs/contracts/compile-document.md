@@ -9,6 +9,7 @@
 {
   "widthMm": 100,
   "heightMm": 100,
+  "fabric": "knit",
   "layers": [
     {
       "id": "layer-red",
@@ -35,8 +36,11 @@
 4. `widthMm`/`heightMm` 是画布尺寸；当前不校验是否超出 hoop（Phase 5）。
 5. Phase 1 支持 `fill` / `running` / `satin`；satin 要求 `pathD` 含两条轨线（两个子路径），
    编译器输出 `inkstitch:satin_column="true"`。更复杂的 satin 参数（密度、拉布补偿、分段）待补。
-6. `angleDeg` / `rowSpacingMm` / `underlay` 输出为 `inkstitch:*` 属性；属性名与单位见
-   `docs/contracts/inkstitch-params.md`。
+6. `angleDeg` / `rowSpacingMm` / `underlay` / `pullCompensationMm` / `underlaySpacingMm` /
+   `maxStitchLengthMm` / `satinDensityMm` / `satinHeavyUnderlay` 输出为 `inkstitch:*` 属性；
+   属性名与单位见 `docs/contracts/inkstitch-params.md`。
+7. `fabric` 指定面料预设（`woven`/`knit`/`pique`/`terry`/`fleece`/`denim`/`twill`/`leather`），
+   为未显式设置的参数填入默认值；显式值优先。数值与出处见 `docs/reference/parameters.md`。
 
 ## 3. 编译结果
 
@@ -69,6 +73,10 @@
 | 70 mm 折线，`type: running` | `Stroke` 元素 / 39 针 / bounds 10..50 × 50..80 mm |
 | 两条 40 mm 轨线，`type: satin` | `SatinColumn` 元素 / 210 针 / bounds 10..30 × 10..50 mm |
 | 同一双色文档导出 PES | 22,326 B / 2 色块 / 3495 针 / Brother 线色（`#d15400`,`#2584bb`） |
+| 填充 woven（pull 0.20 / row 0.40） | 1440 针 / bounds 9.638..50.380 × 10..40.203 |
+| 填充 knit（pull 0.30 / row 0.42） | 1432 针 / bounds 9.530..50.488 × 10..40.113 |
+| 缎面 woven（中心线打底） | 243 针 / bounds 9.8..30.2 × 10..50 |
+| 缎面 knit（轮廓+锯齿打底） | 343 针 / bounds 9.7..30.3 × 10..50 |
 
 ## 5. 待扩展
 
