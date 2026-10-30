@@ -105,6 +105,25 @@ export interface VectorizeResult {
   stats: { layers: number; paths: number; widthMm: number; heightMm: number };
 }
 
+export interface WorksheetMeta {
+  projectName?: string;
+  fabric?: string | null;
+  hoop?: string | null;
+}
+
+export async function downloadWorksheet(
+  plan: StitchPlan,
+  meta: WorksheetMeta = {},
+): Promise<Blob> {
+  const response = await fetch("/api/v1/worksheet", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ plan, ...meta }),
+  });
+  if (!response.ok) throw new Error(await readError(response));
+  return response.blob();
+}
+
 export async function vectorizeImage(
   file: File,
   widthMm = 100,

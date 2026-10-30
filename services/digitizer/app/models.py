@@ -80,6 +80,13 @@ class CheckRequest(ContractModel):
     hoop_height_mm: float = Field(default=100.0, gt=0)
 
 
+class WorksheetRequest(ContractModel):
+    plan: StitchPlan
+    project_name: str = "Stitchord Design"
+    fabric: str | None = None
+    hoop: str | None = None
+
+
 class Severity(str):
     ERROR = "error"
     WARNING = "warning"

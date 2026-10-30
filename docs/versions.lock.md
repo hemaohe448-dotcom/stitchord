@@ -26,6 +26,9 @@
 | starlette | 1.10.0 | pip |
 | pyembroidery | 1.5.1 | pip |
 | python-multipart | 0.0.32 | pip |
+| Pillow | 13.0.0 | pip（矢量化/工艺单预览） |
+| vtracer | 0.6.15 | pip（图片矢量化） |
+| reportlab | 5.1.0 | pip（工艺单 PDF） |
 
 ## Phase 1 无头验证（2026-10-30）
 
@@ -37,6 +40,8 @@
 | pystitch | 1.0.1 | Ink/Stitch 的 IO 层 |
 | shapely | 2.2.0 | 几何 |
 | numpy | 2.2.6 | 固定版本 |
+| Pillow | 13.0.0 | 工艺单预览 |
+| reportlab | 5.1.0 | 工艺单 PDF |
 
 证据与命令：`docs/research/inkstitch-headless.md`、`tools/spike/`。
 

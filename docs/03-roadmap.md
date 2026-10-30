@@ -49,7 +49,7 @@
 **进展（2026-10-30）**：库调用路径已跑通（无 Inkscape、需 wxPython、输出确定），
 完成 CompileDocument(mm) → SVG(px) → plan/DST 端到端（2 色块/3490 针），
 fill/running/satin + PES，面料预设（woven/knit 实测差异），
-`/v1/digitize` 已接入 3.11 服务并在网页生成（57 tests），12 例自引用黄金语料。
+`/v1/digitize` 已接入 3.11 服务并在网页生成（58 tests），12 例自引用黄金语料。
 详见 `docs/research/inkstitch-headless.md`、`docs/contracts/compile-document.md`、
 `docs/reference/parameters.md`；剩余：Inkscape 参考对比、Linux 镜像、DST 边界针差异固定。
 
@@ -162,7 +162,8 @@ fill/running/satin + PES，面料预设（woven/knit 实测差异），
 
 **进展（2026-10-30）**：网页已有 5 种绣框预设 + `/v1/stitch/check` 校验，
 超出绣框为 error（禁用导出）、边距不足为 warning；6 种格式导出并读回，
-矩阵见 `docs/reference/machine-formats.md`（JEF 暂用 pyembroidery 回退）。
+矩阵见 `docs/reference/machine-formats.md`（JEF 暂用 pyembroidery 回退）；
+`/v1/worksheet` 可下载 A4 工艺单（预览、参数、线色顺序、估算线量/工时）。
 剩余：机型规则、分框、真实文件语料。
 
 **目标**：主流机型/格式可用，边界情况有明确行为。

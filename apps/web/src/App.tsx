@@ -4,6 +4,7 @@ import type { ExportFormat, StitchPlan } from "@stitchord/contracts";
 import {
   checkPlan,
   downloadBlob,
+  downloadWorksheet,
   digitizeDocument,
   digitizeExport,
   exportStitch,
@@ -335,6 +336,24 @@ export default function App() {
     }
   }
 
+  async function onWorksheet() {
+    setBusy(true);
+    setError(null);
+    try {
+      const blob = await downloadWorksheet(plan, {
+        projectName: "Stitchord Design",
+        fabric: doc?.fabric ?? null,
+        hoop,
+      });
+      downloadBlob(blob, `stitchord-worksheet-${Date.now()}.pdf`);
+      setNotice("已下载工艺单 PDF");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function setColor(hex: string) {
     if (!selected) return;
     updateObject(selected.id, { color: { ...selected.color, hex } });
@@ -397,6 +416,14 @@ export default function App() {
             disabled={busy}
           >
             导入文件
+          </button>
+          <button
+            type="button"
+            className="button ghost"
+            onClick={() => void onWorksheet()}
+            disabled={busy || generating}
+          >
+            工艺单
           </button>
           <button
             type="button"

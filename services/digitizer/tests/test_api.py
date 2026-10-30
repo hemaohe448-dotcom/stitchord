@@ -61,6 +61,23 @@ def test_check_endpoint_flags_hoop():
     assert any(issue["code"] == "OUTSIDE_HOOP" for issue in body["issues"])
 
 
+def test_worksheet_pdf():
+    plan = sample_plan().model_dump(by_alias=True)
+    response = client.post(
+        "/v1/worksheet",
+        json={
+            "plan": plan,
+            "projectName": "Two blocks",
+            "fabric": "woven",
+            "hoop": "100x100",
+        },
+    )
+    assert response.status_code == 200, response.text
+    assert response.headers["content-type"] == "application/pdf"
+    assert response.content.startswith(b"%PDF")
+    assert len(response.content) > 2000
+
+
 def test_export_and_read_back():
     plan: StitchPlan = sample_plan()
     response = client.post(

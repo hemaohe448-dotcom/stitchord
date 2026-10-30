@@ -15,9 +15,16 @@ from fastapi.responses import Response
 from . import inkstitch_adapter
 from .compiler import CompileDocument, compile_svg
 from .convert import read_stitch_plan, write_stitch_file
-from .models import CheckRequest, ExportRequest, StitchPlan, ValidationReport
+from .models import (
+    CheckRequest,
+    ExportRequest,
+    StitchPlan,
+    ValidationReport,
+    WorksheetRequest,
+)
 from .validation import validate_plan, validate_with_hoop
 from .vectorize import vectorize_image
+from .worksheet import build_worksheet
 
 MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 ALLOWED_EXTENSIONS = {".dst", ".pes", ".exp", ".jef", ".vp3", ".xxx"}
@@ -91,6 +98,26 @@ def validate(plan: StitchPlan) -> ValidationReport:
 def check(request: CheckRequest) -> ValidationReport:
     return validate_with_hoop(
         request.plan, request.hoop_width_mm, request.hoop_height_mm
+    )
+
+
+@app.post("/v1/worksheet")
+def worksheet(request: WorksheetRequest) -> Response:
+    try:
+        payload = build_worksheet(
+            request.plan,
+            project_name=request.project_name,
+            fabric=request.fabric,
+            hoop=request.hoop,
+        )
+    except Exception as exc:  # reportlab/Pillow errors vary
+        raise HTTPException(status_code=422, detail=f"could not build worksheet: {exc}") from exc
+    return Response(
+        content=payload,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": 'attachment; filename="stitchord-worksheet.pdf"',
+        },
     )
 
 
