@@ -23,6 +23,7 @@ class DigitizeResult:
     plan: dict
     dst: bytes
     sha256: str
+    writer: str = "inkstitch"
 
 
 def _prepare_paths() -> None:
@@ -151,10 +152,27 @@ def digitize_svg(svg_path: Path, dst_path: Path, dpi: float = 96.0) -> DigitizeR
         raise ValueError("no embroiderable elements found in SVG")
 
     plan = stitch_groups_to_stitch_plan(groups)
-    output.write_embroidery_file(str(dst_path), plan, root, settings={"date": ""})
+    contract = _plan_to_contract(plan, dpi=dpi)
+
+    writer = "inkstitch"
+    if dst_path.suffix.lower() == ".jef":
+        # pystitch's JefWriter emits a file its own reader rejects (offset table);
+        # fall back to pyembroidery's writer for this format only.
+        from .convert import plan_to_pattern
+        from .models import StitchPlan
+
+        import pyembroidery
+
+        pattern = plan_to_pattern(StitchPlan.model_validate(contract))
+        pyembroidery.write_jef(pattern, str(dst_path))
+        writer = "pyembroidery-fallback"
+    else:
+        output.write_embroidery_file(str(dst_path), plan, root, settings={"date": ""})
+
     payload = dst_path.read_bytes()
     return DigitizeResult(
-        plan=_plan_to_contract(plan, dpi=dpi),
+        plan=contract,
         dst=payload,
         sha256=hashlib.sha256(payload).hexdigest(),
+        writer=writer,
     )

@@ -102,6 +102,23 @@ def test_digitize_export_pes(tmp_path):
 
 
 @needs_inkstitch
+@pytest.mark.parametrize(
+    ("fmt", "min_threads"),
+    [("dst", 0), ("exp", 0), ("pes", 2), ("jef", 2), ("vp3", 2), ("xxx", 2)],
+)
+def test_machine_format_roundtrip(fmt, min_threads, tmp_path):
+    response = client.post(f"/v1/digitize/export?format={fmt}", json=DOCUMENT)
+    assert response.status_code == 200, response.text
+    path = tmp_path / f"out.{fmt}"
+    path.write_bytes(response.content)
+    pattern = pyembroidery.read(str(path))
+    assert len(pattern.stitches) > 1000
+    assert len(pattern.threadlist) >= min_threads
+    bounds = pattern.bounds()
+    assert bounds[2] > bounds[0] and bounds[3] > bounds[1]
+
+
+@needs_inkstitch
 def test_unknown_fabric_returns_422():
     document = dict(DOCUMENT)
     document["fabric"] = "silk"
