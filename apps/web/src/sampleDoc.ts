@@ -3,6 +3,8 @@ export interface CompileStitch {
   rowSpacingMm?: number;
   angleDeg?: number;
   underlay?: boolean;
+  satin_heavy_underlay?: boolean;
+  pull_compensation_mm?: number;
 }
 
 export interface CompileObject {

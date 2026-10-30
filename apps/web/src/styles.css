@@ -434,6 +434,11 @@ button {
   accent-color: var(--accent);
 }
 
+.checkbox-field {
+  align-self: end;
+  padding-bottom: 6px;
+}
+
 .stage {
   position: relative;
   min-width: 0;

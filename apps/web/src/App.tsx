@@ -29,6 +29,23 @@ function allObjects(
   return layers.flatMap((layer) => layer.objects);
 }
 
+function withoutUnderlay(doc: CompileDocument): CompileDocument {
+  return {
+    ...doc,
+    layers: doc.layers.map((layer) => ({
+      ...layer,
+      objects: layer.objects.map((obj) => ({
+        ...obj,
+        stitch: {
+          ...obj.stitch,
+          underlay: false,
+          satin_heavy_underlay: false,
+        },
+      })),
+    })),
+  };
+}
+
 export default function App() {
   const {
     doc,
@@ -68,6 +85,9 @@ export default function App() {
   const [generating, setGenerating] = useState(false);
   const [nodeMode, setNodeMode] = useState(false);
   const [drawMode, setDrawMode] = useState(false);
+  const [maxColors, setMaxColors] = useState(8);
+  const [removeBackground, setRemoveBackground] = useState(true);
+  const [previewTopOnly, setPreviewTopOnly] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState("示例工程 · 正在生成针迹…");
 
@@ -79,14 +99,15 @@ export default function App() {
   useEffect(() => {
     if (!doc) return;
     let cancelled = false;
+    const source = previewTopOnly ? withoutUnderlay(doc) : doc;
     const timer = window.setTimeout(async () => {
       setGenerating(true);
       try {
-        const next = await digitizeDocument(doc);
+        const next = await digitizeDocument(source);
         if (cancelled) return;
         setPlan(next);
         setNotice(
-          `已生成 · ${doc.fabric ?? "woven"} · ${next.stats.stitchCount.toLocaleString()} 针`,
+          `${previewTopOnly ? "预览（仅面线）" : "已生成"} · ${doc.fabric ?? "woven"} · ${next.stats.stitchCount.toLocaleString()} 针`,
         );
       } catch (cause) {
         if (!cancelled) {
@@ -100,7 +121,7 @@ export default function App() {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [doc, setPlan]);
+  }, [doc, previewTopOnly, setPlan]);
 
   async function handleFile(file: File) {
     setBusy(true);
@@ -127,7 +148,12 @@ export default function App() {
     setBusy(true);
     setError(null);
     try {
-      const result = await vectorizeImage(file, 100, 8);
+      const result = await vectorizeImage(
+        file,
+        100,
+        maxColors,
+        removeBackground,
+      );
       setDoc(result.document);
       setNotice(
         `矢量化 · ${result.stats.layers} 色 / ${result.stats.paths} 个路径 · 正在生成针迹…`,
@@ -358,6 +384,31 @@ export default function App() {
                   </option>
                 ))}
               </select>
+            </div>
+            <div className="field-row">
+              <div className="field">
+                <label htmlFor="colors">矢量化颜色数</label>
+                <input
+                  id="colors"
+                  type="number"
+                  min="2"
+                  max="16"
+                  value={maxColors}
+                  onChange={(event) =>
+                    setMaxColors(
+                      Math.min(16, Math.max(2, Number(event.target.value) || 8)),
+                    )
+                  }
+                />
+              </div>
+              <label className="toggle checkbox-field">
+                <input
+                  type="checkbox"
+                  checked={removeBackground}
+                  onChange={(event) => setRemoveBackground(event.target.checked)}
+                />
+                <span>去白底</span>
+              </label>
             </div>
             <div className="button-row">
               <button
@@ -669,6 +720,14 @@ export default function App() {
                 onChange={(event) => setShowJumps(event.target.checked)}
               />
               <span>显示跳针路径</span>
+            </label>
+            <label className="toggle">
+              <input
+                type="checkbox"
+                checked={!previewTopOnly}
+                onChange={(event) => setPreviewTopOnly(!event.target.checked)}
+              />
+              <span>显示打底（仅影响预览）</span>
             </label>
             <p className="hint">
               滚轮缩放，拖拽空白平移，拖拽对象移动。快捷键：Ctrl+Z/Y 撤销重做，Delete 删除，
