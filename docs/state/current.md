@@ -21,6 +21,11 @@
   10px 矩形 48 针、双色 419 针、输出确定；证据 `docs/research/inkstitch-headless.md`；
 - [x] **P1 worker 适配层**：`services/inkstitch_worker/worker.py` 输入扁平 SVG，输出
   StitchPlan JSON + DST；双色 fixture 通过契约校验（pydantic）且两次运行 SHA 一致；
+- [x] **P1 编译器 + 端到端**：`services/digitizer/app/compiler.py` 把 CompileDocument(mm)
+  编译为 SVG(px)；100×100 文档 → 2 色块/3490 针 → DST 11,012 B，两次运行 SHA 一致；
+  DST 读回 3489 针（1 针差异待解释）；
+- [x] **P1 参数与 running**：`row_spacing_mm` 实测生效（0.25→1956 针，0.5→1012 针）；
+  `type: running` 生成 `Stroke`/39 针；参数映射表 `docs/contracts/inkstitch-params.md`；
 - [x] 发现并记录：wxPython 是 import 硬依赖、必须关闭磁盘缓存、plan(px) 与 DST(0.1mm/居中) 的差异。
 
 ## 进行中

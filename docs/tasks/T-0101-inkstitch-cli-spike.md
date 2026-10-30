@@ -65,6 +65,11 @@
 - 连续两次运行 DST SHA-256 一致（确定性成立）；
 - 新增 `services/inkstitch_worker/worker.py`：扁平 SVG → plan JSON + DST，双色 fixture 通过
   pydantic 契约校验，两次运行 SHA 一致；
+- 新增 `services/digitizer/app/compiler.py` + `docs/contracts/compile-document.md`：
+  CompileDocument(mm) → SVG(px)，端到端 100×100 文档 → 2 色块/3490 针 → DST 11,012 B；
+  DST 读回 3489 针（1 针差异，待解释）；
+- 参数：`row_spacing_mm` 实测 0.25→1956 / 0.5→1012 针；`type: running` 生成 39 针；
+  映射表 `docs/contracts/inkstitch-params.md`；
 - 发现 wxPython 是 import 链硬依赖（tartan + sew_stack），最小惰性化补丁不可行；
 - 发现必须关闭 Ink/Stitch 磁盘缓存；plan 为 px，DST 为 0.1 mm 且居中。
 
