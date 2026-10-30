@@ -70,6 +70,7 @@ interface EditorState {
   updateObject: (id: string, patch: Partial<CompileObject>) => void;
   updateStitch: (id: string, patch: Partial<CompileStitch>) => void;
   setTranslate: (id: string, value: [number, number], commit: boolean) => void;
+  setPath: (id: string, pathD: string, commit: boolean) => void;
   addRectangle: () => void;
   addLine: () => void;
   duplicateSelected: () => void;
@@ -156,6 +157,18 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const { doc, dragBase, past } = get();
     if (!doc) return;
     const next = mapObject(doc, id, (obj) => ({ ...obj, translateMm: value }));
+    if (!commit) {
+      set({ doc: next, dragBase: dragBase ?? doc });
+      return;
+    }
+    const base = dragBase ?? doc;
+    set({ doc: next, past: [...past, base], future: [], dragBase: null });
+  },
+
+  setPath: (id, pathD, commit) => {
+    const { doc, dragBase, past } = get();
+    if (!doc) return;
+    const next = mapObject(doc, id, (obj) => ({ ...obj, pathD }));
     if (!commit) {
       set({ doc: next, dragBase: dragBase ?? doc });
       return;

@@ -10,6 +10,7 @@ import {
   vectorizeImage,
 } from "./api";
 import { StitchCanvas } from "./canvas/StitchCanvas";
+import { parsePolyline } from "./path";
 import { FABRICS } from "./sampleDoc";
 import type { CompileDocument, CompileObject } from "./sampleDoc";
 import { useEditorStore } from "./store";
@@ -45,6 +46,7 @@ export default function App() {
     updateObject,
     updateStitch,
     setTranslate,
+    setPath,
     addRectangle,
     addLine,
     duplicateSelected,
@@ -61,12 +63,14 @@ export default function App() {
   const projectInputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [nodeMode, setNodeMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState("示例工程 · 正在生成针迹…");
 
   const selected = doc
     ? allObjects(doc.layers).find((obj) => obj.id === selectedId)
     : undefined;
+  const selectedPolyline = selected ? parsePolyline(selected.pathD) : null;
 
   useEffect(() => {
     if (!doc) return;
@@ -193,6 +197,7 @@ export default function App() {
       }
       if (event.key === "Escape") {
         state.select(null);
+        setNodeMode(false);
         return;
       }
       if (event.key.startsWith("Arrow") && state.selectedId && state.doc) {
@@ -577,6 +582,22 @@ export default function App() {
                   删除对象
                 </button>
               </div>
+              <div className="button-row">
+                <button
+                  type="button"
+                  className={nodeMode ? "button primary" : "button"}
+                  onClick={() => setNodeMode((value) => !value)}
+                >
+                  {nodeMode ? "退出节点编辑" : "节点编辑"}
+                </button>
+              </div>
+              {nodeMode ? (
+                <p className="hint">
+                  {selectedPolyline
+                    ? "拖拽方块移动节点；曲线/多子路径对象暂不支持。"
+                    : "该对象含曲线或多子路径，暂不支持节点编辑。"}
+                </p>
+              ) : null}
             </section>
           ) : null}
 
@@ -631,8 +652,10 @@ export default function App() {
             fitToken={fitToken}
             doc={doc}
             selectedId={selectedId}
+            nodeMode={nodeMode}
             onSelect={select}
             onMove={setTranslate}
+            onPath={setPath}
           />
           {error ? (
             <div className="banner error" role="alert">

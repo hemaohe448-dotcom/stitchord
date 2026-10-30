@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { StitchPlan } from "@stitchord/contracts";
+import { movePolylinePoint, parsePolyline, serializePolyline } from "../path";
 import type { CompileDocument, CompileObject } from "../sampleDoc";
 import { fitViewport, toScreen, toWorld, zoomAt, type Viewport } from "./transform";
 
@@ -10,8 +11,10 @@ interface StitchCanvasProps {
   fitToken: number;
   doc: CompileDocument | null;
   selectedId: string | null;
+  nodeMode: boolean;
   onSelect: (id: string | null) => void;
   onMove: (id: string, value: [number, number], commit: boolean) => void;
+  onPath: (id: string, pathD: string, commit: boolean) => void;
 }
 
 type DragState =
@@ -24,6 +27,14 @@ type DragState =
       startTranslate: [number, number];
       last: [number, number];
       moved: boolean;
+    }
+  | {
+      mode: "node";
+      id: string;
+      index: number;
+      translate: [number, number];
+      startPath: string;
+      lastPath: string;
     };
 
 function findObject(doc: CompileDocument, id: string | null): CompileObject | null {
@@ -75,8 +86,10 @@ export function StitchCanvas({
   fitToken,
   doc,
   selectedId,
+  nodeMode,
   onSelect,
   onMove,
+  onPath,
 }: StitchCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -243,8 +256,28 @@ export function StitchCanvas({
       ctx.setLineDash([4 / viewport.scale, 3 / viewport.scale]);
       ctx.stroke(new Path2D(selected.pathD));
       ctx.restore();
+
+      if (nodeMode) {
+        const polyline = parsePolyline(selected.pathD);
+        if (polyline) {
+          const [dx, dy] = selected.translateMm ?? [0, 0];
+          ctx.fillStyle = "#f6ad55";
+          ctx.strokeStyle = "#1a1206";
+          ctx.lineWidth = 1;
+          for (const [x, y] of polyline.points) {
+            const screenX =
+              (x + dx) * viewport.scale + viewport.tx;
+            const screenY =
+              (y + dy) * viewport.scale + viewport.ty;
+            ctx.beginPath();
+            ctx.rect(screenX - 4, screenY - 4, 8, 8);
+            ctx.fill();
+            ctx.stroke();
+          }
+        }
+      }
     }
-  }, [plan, hidden, showJumps, viewport, size, doc, selectedId]);
+  }, [plan, hidden, showJumps, viewport, size, doc, selectedId, nodeMode]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -277,6 +310,32 @@ export function StitchCanvas({
             viewport,
           );
           const ctx = canvas.getContext("2d");
+          const selectedObject = doc ? findObject(doc, selectedId) : null;
+          if (nodeMode && selectedObject && ctx) {
+            const polyline = parsePolyline(selectedObject.pathD);
+            if (polyline) {
+              const [dx, dy] = selectedObject.translateMm ?? [0, 0];
+              const screenX = event.clientX - rect.left;
+              const screenY = event.clientY - rect.top;
+              for (let index = 0; index < polyline.points.length; index += 1) {
+                const [x, y] = polyline.points[index];
+                const px = (x + dx) * viewport.scale + viewport.tx;
+                const py = (y + dy) * viewport.scale + viewport.ty;
+                if (Math.hypot(px - screenX, py - screenY) <= 9) {
+                  dragRef.current = {
+                    mode: "node",
+                    id: selectedObject.id,
+                    index,
+                    translate: [dx, dy],
+                    startPath: selectedObject.pathD,
+                    lastPath: selectedObject.pathD,
+                  };
+                  event.currentTarget.setPointerCapture(event.pointerId);
+                  return;
+                }
+              }
+            }
+          }
           const hit = doc && ctx ? hitTest(doc, world, ctx) : null;
           if (hit) {
             onSelect(hit.id);
@@ -321,6 +380,21 @@ export function StitchCanvas({
             event.clientY - rect.top,
             viewport,
           );
+          if (drag.mode === "node") {
+            const polyline = parsePolyline(drag.startPath);
+            if (!polyline) return;
+            const next = serializePolyline(
+              movePolylinePoint(
+                polyline,
+                drag.index,
+                world.x - drag.translate[0],
+                world.y - drag.translate[1],
+              ),
+            );
+            drag.lastPath = next;
+            onPath(drag.id, next, false);
+            return;
+          }
           const next: [number, number] = [
             drag.startTranslate[0] + (world.x - drag.startX),
             drag.startTranslate[1] + (world.y - drag.startY),
@@ -331,7 +405,9 @@ export function StitchCanvas({
         }}
         onPointerUp={() => {
           const drag = dragRef.current;
-          if (drag?.mode === "object" && drag.moved) {
+          if (drag?.mode === "node") {
+            onPath(drag.id, drag.lastPath, true);
+          } else if (drag?.mode === "object" && drag.moved) {
             onMove(drag.id, drag.last, true);
           }
           dragRef.current = null;
