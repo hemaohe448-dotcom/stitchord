@@ -28,12 +28,18 @@
 | F13 | 扩展包 import 时即加载 wxPython（`params.py:15`），因此无 wx 的容器会在导入阶段失败 | `inkstitch/lib/extensions/__init__.py:6-20`、`lib/extensions/params.py:15` | 高 |
 | F14 | DST 单条记录最大位移 121 × 0.1 mm = 12.1 mm | `pyembroidery/DstWriter.py:7-8` | 高 |
 
-### 关于 “Roidery”
+### 关于 Roidery（已定位）
 
-截至核查日期，未能定位到名为 **Roidery** 的公开开源绣花项目。检索到的最接近项目是
-[`embroidery-space/embroiderly`](https://github.com/embroidery-space/embroiderly)（十字绣）。
-**这是一个需要用户确认的未知项，不能假装它存在或猜它的能力。**
-如果 Roidery 是某个商业产品 / 私有仓库，请提供链接或截图，我们再做能力对齐。
+用户指认的项目是 [`lork-fork/Roidery`](https://github.com/lork-fork/Roidery)（commit `0187f73`，2026-10-20）：
+
+- **MIT OR Apache-2.0**，Rust，基于 VectorCraft（Illustrator 式矢量编辑）；
+- 具备图层/Sequencer、填充/缎面/running/字母、面料预设、绣框、DST/PES/JEF/EXP/VP3/XXX 导出；
+- 有 `vectorcraft-cli` 无头批处理、MCP/控制协议，以及 `vectorcraft-web`（WASM）版本；
+- 明确标注 early software，量产前必须试缝；
+- 仓库无预编译 release；本机没有 Rust/MSVC 工具链，暂不能本地构建验证。
+
+结论：Roidery 是比 Ink/Stitch 更贴近“Illustrator 式编辑器”的候选，但当前无法在本机构建，
+且完整接入（Rust/WASM + 账户/项目）是独立工程。见 [ADR-0006](adr/0006-roidery-evaluation.md)。
 
 ## 3. 三个项目怎么定位
 
@@ -41,7 +47,7 @@
 | --- | --- | --- | --- |
 | Ink/Stitch | Inkscape 里的机器绣花制版平台 | 绣法算法、针迹计划、机器格式 IO、参数体系、线色目录、测试语料 | 不能直接做 Web 编辑器；强依赖 Inkscape 文档模型；GPL |
 | Embroiderly | 十字绣图纸设计器（web-first） | 图层交互、画布性能方案、WASM 计算分层、工程化程度 | 数据模型是十字绣格针；不是 DST 针迹编辑器；GPL |
-| Roidery | 未知 | 未知 | 不能纳入架构，待确认 |
+| Roidery | Illustrator 式 Rust 绣花制版应用（VectorCraft fork） | 图层/Sequencer、绣法、面料预设、格式、无头 CLI/MCP | 早期软件、无 release、需 Rust 构建；完整 Web 接入成本高 |
 
 **给用户的直说**：你喜欢的“Illustrator 风格”是一种交互目标，但**没有证据表明 Embroiderly 实现了
 机器绣花式的图层针迹编辑**——它的 `ARCHITECTURE.md:30` 里的 “layers” 指的是软件分层，不是绣花图层。
@@ -154,8 +160,9 @@ Stitchord 文档(JSON) --compile--> Ink/Stitch SVG --Ink/Stitch CLI--> StitchPla
 
 ## 8. 待决问题（Phase 0 必须回答）
 
-1. Roidery 到底是什么？有无仓库/API/截图？
-2. 商业上能否接受 GPL-3.0？是否需要闭源发行？
+1. ~~Roidery 到底是什么？~~ 已定位：`lork-fork/Roidery`（MIT/Apache）。
+2. ~~商业上能否接受 GPL-3.0？~~ 已确认接受（仅服务端调用、不售卖代码）。
 3. 首批目标机型与幅面（Brother / Tajima / Barudan；单头 / 多头）？
 4. 是否有真实绣花机与打样条件（决定“生产级”验收能否闭环）？
 5. 部署形态：公有云 SaaS、私有化、还是两者都要？
+6. 是否投入 Rust/WASM 构建链，把 Roidery 的编辑器内核接进来（Phase 2 门槛）？
