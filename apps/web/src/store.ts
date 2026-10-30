@@ -125,26 +125,26 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setPlan: (plan) => set({ plan }),
 
   setDoc: (doc) =>
-    set({
+    set((state) => ({
       doc,
       selectedId: null,
       selectedIds: [],
-      past: [],
+      past: state.doc ? [...state.past, state.doc].slice(-100) : state.past,
       future: [],
       dragBase: null,
-      fitToken: get().fitToken + 1,
-    }),
+      fitToken: state.fitToken + 1,
+    })),
 
   newSample: () =>
-    set({
+    set((state) => ({
       doc: buildSampleDocument("woven", "fill"),
       selectedId: null,
       selectedIds: [],
-      past: [],
+      past: state.doc ? [...state.past, state.doc].slice(-100) : state.past,
       future: [],
       dragBase: null,
-      fitToken: get().fitToken + 1,
-    }),
+      fitToken: state.fitToken + 1,
+    })),
 
   select: (id, additive = false) =>
     set((state) => {
@@ -423,9 +423,9 @@ useEditorStore.subscribe((state, previous) => {
   try {
     if (state.doc) {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state.doc));
-    } else {
-      window.localStorage.removeItem(STORAGE_KEY);
     }
+    // Keep the last real project when an imported machine file temporarily
+    // sets doc to null; clearing storage here would lose the user's work.
   } catch {
     /* storage may be full or disabled; editing still works in memory */
   }

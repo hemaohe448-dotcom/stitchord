@@ -11,7 +11,7 @@ from app.models import (
     StitchStats,
     ThreadColor,
 )
-from app.validation import validate_plan, validate_with_hoop
+from app.validation import computed_stats, validate_plan, validate_with_hoop
 
 
 def sample_plan() -> StitchPlan:
@@ -107,3 +107,30 @@ def test_hoop_tight_margin_is_warning():
     report = validate_with_hoop(sample_plan(), hoop_width_mm=25, hoop_height_mm=15)
     assert report.ok
     assert any(issue.code == "TIGHT_HOOP_MARGIN" for issue in report.issues)
+
+
+def test_hoop_ignores_forged_bounds():
+    plan = sample_plan().model_copy(deep=True)
+    plan.bounds = type(plan.bounds)(min_x=0, min_y=0, max_x=1, max_y=1)
+    plan.color_blocks[0].stitches[-1].x = 200
+    report = validate_with_hoop(plan, hoop_width_mm=10, hoop_height_mm=10)
+    assert not report.ok
+    assert any(issue.code == "OUTSIDE_HOOP" for issue in report.issues)
+
+
+def test_nan_is_rejected():
+    plan = sample_plan().model_copy(deep=True)
+    plan.color_blocks[0].stitches[0].x = float("nan")
+    report = validate_plan(plan)
+    assert not report.ok
+    assert any(issue.code == "NON_FINITE_COORDINATE" for issue in report.issues)
+
+
+def test_stats_are_recomputed():
+    plan = sample_plan().model_copy(deep=True)
+    plan.stats.stitch_count = 999_999
+    stats = computed_stats(plan)
+    assert stats.stitch_count != 999_999
+    assert stats.stitch_count == sum(
+        1 for block in plan.color_blocks for stitch in block.stitches if stitch.command == "STITCH"
+    )

@@ -6,11 +6,11 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | U-001 | Roidery 是什么？有无公开仓库/API？ | 需求范围 | **已定位**：`lork-fork/Roidery`，MIT/Apache，Rust/VectorCraft | 用户 | — | **已解决** |
 | U-002 | Ink/Stitch 无头调用的入口选择 | P1 阻塞 | 已验证库调用可行；CLI 未验证，且需 import 全部扩展 | 架构 | — | **已解决**：P1 用库调用 |
-| U-003 | 无 wxPython/GTK 时能否运行 | 镜像体积/稳定性 | 已确认 tartan/sew_stack 多处 import wx；最小补丁不可行 | 架构 | — | **已解决**：镜像安装 wxPython |
+| U-003 | 无 wxPython/GTK 时能否运行 | 镜像体积/稳定性 | 已确认 tartan/sew_stack 多处 import wx；最小补丁不可行。Dockerfile 已写（GTK + wx + 固定 Ink/Stitch），**尚未构建验证** | 架构 | P1 | 待构建验证 |
 | U-004 | DST 对 TRIM/STOP 的编码与读回行为 | 导出保真 | 仅验证 STITCH/COLOR_CHANGE，未验证 TRIM | 后端 | P1 | 待验证 |
 | U-005 | 目标机型与幅面（Brother/Tajima/Barudan） | 规则/格式 | 未提供 | 用户 | P1 | 待确认 |
 | U-006 | 是否有试缝/打样条件 | P6 验收 | 未提供 | 用户 | P2 | 待确认 |
-| U-007 | PES/JEF/VP3/XXX 的颜色与锁针字段 | P5 | 未实测 | 后端 | P5 | 待验证 |
+| U-007 | PES/JEF/VP3/XXX 的颜色与锁针字段 | P5 | 6 格式已读回（JEF 回退 pyembroidery）；**锁针/机型字段未验证** | 后端 | P5 | 部分验证 |
 | U-008 | 照片反推的可行性与数据获取 | P7 | 仅文献判断 | 算法 | P7 | 待验证 |
 | U-009 | GPL 是否符合商业目标 | 架构/法务 | 用户确认：服务端调用、不售卖代码 | 产品 | — | **已解决**：接受 GPL |
 | U-010 | 代理环境下的 CI/部署网络策略 | 交付 | 本机代理，未定 CI | 运维 | P1 | 待定 |

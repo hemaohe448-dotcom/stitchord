@@ -119,6 +119,18 @@ def test_machine_format_roundtrip(fmt, min_threads, tmp_path):
 
 
 @needs_inkstitch
+def test_export_rejects_outside_hoop():
+    response = client.post(
+        "/v1/digitize/export?hoop_width_mm=50&hoop_height_mm=100",
+        json=DOCUMENT,
+    )
+    assert response.status_code == 422, response.text
+    detail = response.json()["detail"]
+    assert detail["message"]
+    assert any(issue["code"] == "OUTSIDE_HOOP" for issue in detail["issues"])
+
+
+@needs_inkstitch
 def test_unknown_fabric_returns_422():
     document = dict(DOCUMENT)
     document["fabric"] = "silk"

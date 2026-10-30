@@ -74,7 +74,7 @@ Project
 - `rowSpacingMm` 是填充行距，`densityMm` 是缎面/针脚间距，两者不可混用。
 - 画布必须落在声明的 hoop 内；超出时必须走“分框”流程（Phase 5），否则校验拒绝。
 - 图层顺序即默认缝制顺序；`sequencer` 可重排以减少换色/跳针，但必须可解释、可回退。
-- 文档以 JSON 存储（`.stitchord` zip：`project.json` + `assets/` + `thumbnail.png`），带 `schemaVersion` 与迁移函数。
+- 当前工程格式：**普通 JSON**（无 zip、无 `schemaVersion`/迁移；计划 P4 再升级为 `.stitchord` 包）。
 - 文档**不存生成后的针迹**；只存缓存 hash，缓存失效即重算。
 
 文档示例（节选）：
@@ -115,6 +115,8 @@ Document(JSON)
 
 **单一真相**：`StitchPlan` 由 worker 内的 Ink/Stitch 管线生成一次；预览与导出都消费这一份计划。
 pyembroidery 只用于导入、round-trip 验证与独立回归，不作为第二条生产导出路径。
+**已记录例外**：JEF 因 pystitch writer 不可读回而回退 pyembroidery（见 `docs/reference/machine-formats.md`）；
+机器文件导入仍走 pyembroidery 读入，不参与“文档→机器文件”主链路。
 若两者的 DST 字节出现差异，以 Ink/Stitch 产物为准并调查差异，不得并行维护两套几何。
 
 ### 5.2 规则
@@ -185,11 +187,11 @@ pyembroidery 只用于导入、round-trip 验证与独立回归，不作为第�
 | GET | `/v1/jobs/{id}` | P4 | 任务状态 / 进度 / 错误 |
 | POST | `/v1/exports` | P5 | 导出并写入对象存储 |
 
-约定：
+约定（**目标态，当前未实现**）：
 - 所有写接口支持 `Idempotency-Key`；
 - 任务异步化，返回 `jobId`，通过 SSE/WebSocket 推送进度；
 - 错误统一 `{code, message, details, traceId}`；
-- 上传限制 25 MB（Phase 0），后续按套餐调整。
+- 上传限制 15 MB（当前实现），后续按套餐调整。
 
 ## 8. 矢量化流水线（Phase 3）
 
@@ -236,11 +238,13 @@ upload
 
 ## 11. 安全
 
-- SVG 是不可信输入：禁用脚本/外部实体/远程引用，先消毒再进 Ink/Stitch；
-- worker 无外网、只读挂载、CPU/内存/时间限额；
-- 上传文件类型嗅探 + 大小限制 + 病毒扫描（Phase 4）；
-- 导出下载用短时效签名 URL；
-- 多租户隔离测试纳入 CI（跨租户读取必须 403）。
+**目标态；当前实现只做到部分**：
+- SVG 是不可信输入：禁用脚本/外部实体/远程引用，先消毒再进 Ink/Stitch
+  （**当前仅 UTF-8/大小检查，未做消毒/实体防护**）；
+- worker 无外网、只读挂载、CPU/内存/时间限额（**Dockerfile 已写，尚未构建验证；compose 未加限额**）；
+- 上传文件类型嗅探 + 大小限制 + 病毒扫描（当前仅扩展名 + 15 MB）；
+- 导出下载用短时效签名 URL（未实现）；
+- 多租户隔离测试纳入 CI（未实现）。
 
 ## 12. 非功能预算
 

@@ -22,6 +22,7 @@ from .models import (
     ValidationReport,
     WorksheetRequest,
 )
+from .svg_import import import_svg
 from .validation import validate_plan, validate_with_hoop
 from .vectorize import vectorize_image
 from .worksheet import build_worksheet
@@ -125,6 +126,34 @@ ALLOWED_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 MAX_IMAGE_BYTES = 15 * 1024 * 1024
 
 
+@app.post("/v1/import/svg")
+def import_svg_file(
+    file: UploadFile = File(...),
+    width_mm: float = Form(100.0),
+) -> dict:
+    suffix = Path(file.filename or "").suffix.lower()
+    if suffix != ".svg":
+        raise HTTPException(status_code=415, detail="expected an .svg file")
+    data = file.file.read(MAX_IMAGE_BYTES + 1)
+    if len(data) > MAX_IMAGE_BYTES:
+        raise HTTPException(status_code=413, detail="SVG exceeds 15 MB")
+    if not data:
+        raise HTTPException(status_code=400, detail="empty SVG")
+    try:
+        document = import_svg(data, width_mm=width_mm)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {
+        "document": document.model_dump(by_alias=True),
+        "stats": {
+            "layers": len(document.layers),
+            "paths": sum(len(layer.objects) for layer in document.layers),
+            "widthMm": document.width_mm,
+            "heightMm": document.height_mm,
+        },
+    }
+
+
 @app.post("/v1/vectorize")
 def vectorize(
     file: UploadFile = File(...),
@@ -201,8 +230,24 @@ def digitize(document: CompileDocument) -> StitchPlan:
 def digitize_export(
     document: CompileDocument,
     format: Literal["dst", "pes", "jef", "exp", "vp3", "xxx"] = "dst",
+    hoop_width_mm: float | None = None,
+    hoop_height_mm: float | None = None,
 ) -> Response:
     result = _digitize_document(document, suffix=format)
+    plan = StitchPlan.model_validate(result.plan)
+    report = validate_with_hoop(
+        plan,
+        hoop_width_mm if hoop_width_mm and hoop_width_mm > 0 else document.width_mm,
+        hoop_height_mm if hoop_height_mm and hoop_height_mm > 0 else document.height_mm,
+    )
+    if not report.ok:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": "针迹未通过校验，拒绝导出",
+                "issues": [issue.model_dump(by_alias=True) for issue in report.issues],
+            },
+        )
     return Response(
         content=result.dst,
         media_type="application/octet-stream",

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import math
 
-from .models import StitchPlan, ValidationIssue, ValidationReport
+from .models import StitchPlan, StitchStats, ValidationIssue, ValidationReport
 
 # DST 单条记录最大位移 121 × 0.1 mm = 12.1 mm（pyembroidery DstWriter.py:7-8）。
 # 物理机器可能允许更长，但为保证 DST 可编码，静态上限取 12.1 mm；更长应拆分或跳针。
@@ -21,6 +21,41 @@ WARN_BLOCK_STITCHES = 50_000
 
 def _dist(a, b) -> float:
     return math.hypot(a.x - b.x, a.y - b.y)
+
+
+def computed_bounds(plan: StitchPlan) -> tuple[float, float, float, float] | None:
+    """Bounds from the actual stitches; caller-supplied bounds are not trusted."""
+    xs: list[float] = []
+    ys: list[float] = []
+    for block in plan.color_blocks:
+        for stitch in block.stitches:
+            if math.isfinite(stitch.x) and math.isfinite(stitch.y):
+                xs.append(stitch.x)
+                ys.append(stitch.y)
+    if not xs:
+        return None
+    return min(xs), min(ys), max(xs), max(ys)
+
+
+def computed_stats(plan: StitchPlan) -> StitchStats:
+    stitch_count = 0
+    jump_count = 0
+    trim_count = 0
+    for block in plan.color_blocks:
+        for stitch in block.stitches:
+            if stitch.command == "STITCH":
+                stitch_count += 1
+            elif stitch.command == "JUMP":
+                jump_count += 1
+            elif stitch.command == "TRIM":
+                trim_count += 1
+    return StitchStats(
+        stitch_count=stitch_count,
+        jump_count=jump_count,
+        trim_count=trim_count,
+        color_changes=max(len(plan.color_blocks) - 1, 0),
+        color_blocks=len(plan.color_blocks),
+    )
 
 
 def validate_plan(plan: StitchPlan) -> ValidationReport:
@@ -61,6 +96,18 @@ def validate_plan(plan: StitchPlan) -> ValidationReport:
 
         previous = None
         for index, stitch in enumerate(block.stitches):
+            if not math.isfinite(stitch.x) or not math.isfinite(stitch.y):
+                issues.append(
+                    ValidationIssue(
+                        code="NON_FINITE_COORDINATE",
+                        severity="error",
+                        message="针迹坐标包含 NaN/Infinity",
+                        block_id=block.id,
+                        stitch_index=index,
+                    )
+                )
+                previous = None
+                continue
             if stitch.command in ("STITCH", "JUMP") and previous is not None:
                 distance = _dist(previous, stitch)
                 if stitch.command == "STITCH" and distance > MAX_STITCH_MM:
@@ -96,16 +143,26 @@ def validate_plan(plan: StitchPlan) -> ValidationReport:
             if stitch.command in ("STITCH", "JUMP"):
                 previous = stitch
 
-    width = plan.bounds.max_x - plan.bounds.min_x
-    height = plan.bounds.max_y - plan.bounds.min_y
-    if width <= 0 or height <= 0:
+    bounds = computed_bounds(plan)
+    if bounds is None:
         issues.append(
             ValidationIssue(
                 code="DEGENERATE_BOUNDS",
                 severity="error",
-                message="图案包围盒为空",
+                message="图案没有有效坐标",
             )
         )
+    else:
+        width = bounds[2] - bounds[0]
+        height = bounds[3] - bounds[1]
+        if width <= 0 or height <= 0:
+            issues.append(
+                ValidationIssue(
+                    code="DEGENERATE_BOUNDS",
+                    severity="error",
+                    message="图案包围盒为空",
+                )
+            )
     if total == 0:
         issues.append(
             ValidationIssue(
@@ -129,8 +186,12 @@ def validate_with_hoop(
     base = validate_plan(plan)
     issues = list(base.issues)
 
-    width = plan.bounds.max_x - plan.bounds.min_x
-    height = plan.bounds.max_y - plan.bounds.min_y
+    width = 0.0
+    height = 0.0
+    bounds = computed_bounds(plan)
+    if bounds is not None:
+        width = bounds[2] - bounds[0]
+        height = bounds[3] - bounds[1]
     if width > hoop_width_mm or height > hoop_height_mm:
         issues.append(
             ValidationIssue(

@@ -63,8 +63,15 @@ export async function digitizeDocument(
 export async function digitizeExport(
   document: CompileDocument,
   format: ExportFormat = "dst",
+  hoopWidthMm?: number,
+  hoopHeightMm?: number,
 ): Promise<Blob> {
-  const response = await fetch(`/api/v1/digitize/export?format=${format}`, {
+  const params = new URLSearchParams({ format });
+  if (hoopWidthMm && hoopHeightMm) {
+    params.set("hoop_width_mm", String(hoopWidthMm));
+    params.set("hoop_height_mm", String(hoopHeightMm));
+  }
+  const response = await fetch(`/api/v1/digitize/export?${params}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(document),
@@ -122,6 +129,21 @@ export async function downloadWorksheet(
   });
   if (!response.ok) throw new Error(await readError(response));
   return response.blob();
+}
+
+export async function importSvg(
+  file: File,
+  widthMm = 100,
+): Promise<VectorizeResult> {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("width_mm", String(widthMm));
+  const response = await fetch("/api/v1/import/svg", {
+    method: "POST",
+    body: form,
+  });
+  if (!response.ok) throw new Error(await readError(response));
+  return (await response.json()) as VectorizeResult;
 }
 
 export async function vectorizeImage(

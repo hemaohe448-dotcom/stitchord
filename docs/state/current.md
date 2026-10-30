@@ -13,7 +13,7 @@
 - [x] 多智能体协作/防幻觉/上下文规范；
 - [x] 前端骨架：DST/PES 导入 → StitchPlan → Canvas 渲染 → 导出 DST；
 - [x] 后端骨架：预览 / 校验 / 导出 API；
-- [x] 测试：前端 2 个单测，后端 22 个单测/契约测试；
+- [x] 测试：前端 15 个单测，后端 70 个单测/契约测试（3.11 全量）；
 - [x] 构建：`tsc --noEmit`、`vite build` 通过；
 - [x] Claude 独立架构评审（`docs/reviews/2026-10-30-architecture-review.md`），阻断项已处置
   （`docs/reviews/2026-10-30-response.md`）；
@@ -41,7 +41,7 @@
   删除、图层排序、撤销/重做、修改后 450ms 自动重编译；编辑结果可导出 DST；
 - [x] **P2 持久化**：工程文档写入 localStorage，刷新后恢复（历史/计划不持久化）；
 - [x] **P1 自引用黄金语料**：12 个文档用例 + 平移/确定性，覆盖 fill/running/satin、面料、
-  参数、三对象；3.11 全量 **61 passed**（尚缺 Inkscape 参考逐针对比）；
+  参数、三对象；3.11 全量 **70 passed**（尚缺 Inkscape 参考逐针对比）；
 - [x] **P3 基线矢量化**：`/v1/vectorize`（Pillow 量化 + VTracer + mm 缩放）→ CompileDocument；
   网页“图片矢量化”按钮；合成图 2 层/2 路径 → 2,956 针/DST 9,407 B；
   现已支持颜色数 2–16、去白底（边缘洪泛填充，兼容非白背景）、
@@ -65,23 +65,28 @@
   走 Ink/Stitch writer；6 格式全部读回通过，矩阵见 `docs/reference/machine-formats.md`；
   JEF 因 pystitch writer 不可读回，临时回退 pyembroidery；
 - [x] **工艺单 PDF**：`/v1/worksheet` 生成 A4 一页（预览、尺寸、绣框、面料、针数/跳针/剪线、
-  线色顺序、估算线量与工时）；网页“工艺单”按钮下载。
+  线色顺序、估算线量与工时）；网页“工艺单”按钮下载；
+- [x] **SVG 导入**：`/v1/import/svg` 用 svgelements 解析 rect/circle/path/group transform，
+  viewBox → mm，弧线转曲线；网页导入框直接识别 `.svg`；
+- [x] **服务端权威校验**：边界/统计从实际针迹重算，拒绝 NaN/Infinity；
+  `/v1/digitize/export` 也执行绣框校验（越框 422）；前端校验失败时 fail-closed。
 - [x] 发现并记录：wxPython 是 import 硬依赖、必须关闭磁盘缓存、plan(px) 与 DST(0.1mm/居中) 的差异。
 
 ## 进行中
 
-- [ ] P1 worker 镜像（Linux + wx/GTK + 固定 commit）与 12 份黄金语料；
+- [ ] P1 worker 镜像（Dockerfile 已写，**未构建验证**）与 12 份黄金语料；
 - [ ] P1 收尾：Inkscape 参考逐针对比、DST 边界针差异固定测试、性能与错误输入；
 - [ ] ADR-0006 的 Phase 2 门槛：在 CI 构建 Roidery `vectorcraft-cli` 并跑 SVG→DST
   （workflow 已就绪；等待按 `docs/07-github-actions-guide.md` 上传并手动触发）；
-- [ ] P2 编辑器补全：节点编辑、绘制工具、多选、复制粘贴、局部重算。
+- [ ] 生产硬化：认证/配额/请求体上限、SVG 实体防护、CI 去 skip、真实上机试缝；
+- [ ] P2 剩余：局部重算、100 步 undo 上限、Playwright 主流程。
 
 ## 下一步（按优先级）
 
-1. **P1 收尾**：Inkscape 参考逐针对比、DST 边界差异固定测试、错误输入与性能。
-2. **P2 补全**：节点/路径编辑、绘制工具、多选、局部重算。
-3. **Roidery 构建门槛**：按操作手册跑 GitHub Actions，回填 ADR-0006。
-4. **P3**：图片矢量化 MVP 与评测基准。
+1. **Worker 镜像/CI**：在 GitHub Actions 构建 Dockerfile，跑 `/v1/digitize` 冒烟。
+2. **服务端硬化**：认证/限流、请求体上限、SVG 消毒与超时。
+3. **P2/P3**：局部重算、ML 分割与质量基准。
+4. **Roidery 构建门槛**：按操作手册跑 GitHub Actions，回填 ADR-0006。
 
 ## 阻塞 / 风险
 
@@ -91,6 +96,7 @@
 | 无绣花机/打样条件 | 无法完成 P6 生产级验收 | 人类对接打样伙伴 |
 | 无 Rust/MSVC 工具链 | Roidery 内核无法本地构建 | Phase 2 CI 门槛 |
 | 目标机型/幅面未定 | 校验规则与预设无法最终标定 | 用户确认 |
+| 无认证/配额 | 公网部署会暴露无界算力 | 产品/后端 |
 
 ## 环境快照
 

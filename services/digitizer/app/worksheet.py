@@ -15,6 +15,7 @@ from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
 
 from .models import StitchPlan
+from .validation import computed_bounds, computed_stats
 
 PAGE_W, PAGE_H = A4
 MARGIN = 40
@@ -49,9 +50,14 @@ def _thread_length_m(plan: StitchPlan) -> float:
         previous = None
         for stitch in block.stitches:
             point = (stitch.x, stitch.y)
-            if stitch.command == "STITCH" and previous is not None:
-                total += math.hypot(point[0] - previous[0], point[1] - previous[1])
-            previous = point
+            if stitch.command == "STITCH":
+                if previous is not None:
+                    total += math.hypot(point[0] - previous[0], point[1] - previous[1])
+                previous = point
+            elif stitch.command in ("JUMP", "COLOR_CHANGE"):
+                previous = point
+            elif stitch.command == "TRIM":
+                previous = None
     return total / 1000.0
 
 
@@ -89,23 +95,28 @@ def build_worksheet(
         anchor="c",
     )
 
-    width = plan.bounds.max_x - plan.bounds.min_x
-    height = plan.bounds.max_y - plan.bounds.min_y
+    bounds = computed_bounds(plan)
+    if bounds is None:
+        width = height = 0.0
+    else:
+        width = bounds[2] - bounds[0]
+        height = bounds[3] - bounds[1]
+    stats = computed_stats(plan)
     thread = _thread_length_m(plan)
     minutes = (
-        plan.stats.stitch_count / 700.0
-        + plan.stats.color_changes * 0.5
-        + plan.stats.trim_count * 0.1
+        stats.stitch_count / 700.0
+        + stats.color_changes * 0.5
+        + stats.trim_count * 0.1
     )
 
     rows = [
         ("Size", f"{width:.1f} x {height:.1f} mm"),
         ("Hoop", hoop or "-"),
         ("Fabric preset", fabric or "-"),
-        ("Stitches", f"{plan.stats.stitch_count:,}"),
-        ("Jumps / trims", f"{plan.stats.jump_count:,} / {plan.stats.trim_count:,}"),
-        ("Colour blocks", str(plan.stats.color_blocks)),
-        ("Colour changes", str(plan.stats.color_changes)),
+        ("Stitches", f"{stats.stitch_count:,}"),
+        ("Jumps / trims", f"{stats.jump_count:,} / {stats.trim_count:,}"),
+        ("Colour blocks", str(stats.color_blocks)),
+        ("Colour changes", str(stats.color_changes)),
         ("Thread (upper, est.)", f"{thread * 1.3:.1f} m"),
         ("Sew time (est.)", f"{minutes:.1f} min @ 700 spm"),
     ]

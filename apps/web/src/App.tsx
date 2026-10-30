@@ -8,6 +8,7 @@ import {
   digitizeDocument,
   digitizeExport,
   exportStitch,
+  importSvg,
   previewStitch,
   vectorizeImage,
 } from "./api";
@@ -121,8 +122,8 @@ export default function App() {
     if (!doc) return;
     let cancelled = false;
     const source = previewTopOnly ? withoutUnderlay(doc) : doc;
+    setGenerating(true);
     const timer = window.setTimeout(async () => {
-      setGenerating(true);
       try {
         const next = await digitizeDocument(source);
         if (cancelled) return;
@@ -155,7 +156,16 @@ export default function App() {
         setValid(report.ok);
       })
       .catch(() => {
-        if (!cancelled) setValid(true);
+        if (!cancelled) {
+          setValid(false);
+          setIssues([
+            {
+              code: "CHECK_FAILED",
+              severity: "error",
+              message: "校验服务不可用，已禁用导出",
+            },
+          ]);
+        }
       })
       .finally(() => {
         if (!cancelled) setChecking(false);
@@ -169,6 +179,14 @@ export default function App() {
     setBusy(true);
     setError(null);
     try {
+      if (file.name.toLowerCase().endsWith(".svg")) {
+        const result = await importSvg(file, 100);
+        setDoc(result.document);
+        setNotice(
+          `SVG 导入 · ${result.stats.layers} 色 / ${result.stats.paths} 个路径 · 正在生成针迹…`,
+        );
+        return;
+      }
       const next = await previewStitch(file);
       setDoc(null);
       setPlan(next);
@@ -324,8 +342,9 @@ export default function App() {
     setBusy(true);
     setError(null);
     try {
+      const [hoopWidth, hoopHeight] = hoop.split("x").map(Number);
       const blob = doc
-        ? await digitizeExport(doc, format)
+        ? await digitizeExport(doc, format, hoopWidth, hoopHeight)
         : await exportStitch(plan, format);
       downloadBlob(blob, `stitchord-${Date.now()}.${format}`);
       setNotice(
@@ -342,7 +361,9 @@ export default function App() {
     setBusy(true);
     setError(null);
     try {
-      const blob = await downloadWorksheet(plan, {
+      const fullPlan =
+        previewTopOnly && doc ? await digitizeDocument(doc) : plan;
+      const blob = await downloadWorksheet(fullPlan, {
         projectName: "Stitchord Design",
         fabric: doc?.fabric ?? null,
         hoop,
@@ -454,7 +475,7 @@ export default function App() {
             <input
               ref={inputRef}
               type="file"
-              accept=".dst,.pes,.exp,.jef,.vp3,.xxx"
+              accept=".dst,.pes,.exp,.jef,.vp3,.xxx,.svg"
               onChange={onPick}
               hidden
             />
