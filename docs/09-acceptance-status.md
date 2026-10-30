@@ -25,8 +25,8 @@
 
 | 项 | 状态 |
 | --- | --- |
-| Docker worker 镜像 | **未通过**：旧构建在 wxPython 4.3.2 源码编译失败；已改 4.2.5 Linux wheel，尚未重跑 |
-| GitHub `ci` | 上次失败于 Vitest 误收集 e2e；已修，尚未重跑 |
+| Docker worker 镜像 | **构建 + 启动成功**；`smoke test` 失败，诊断日志待回传（2026-10-30 run 41084822203） |
+| GitHub `ci` | ✅ 成功（commit 0653c89） |
 | 认证/多租户 | 只有可选 API key；无用户/归属 |
 | 真实上机试缝 | **没有** |
 | JEF 机台字段 | 仅读回，未机型验证 |

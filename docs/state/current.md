@@ -99,10 +99,9 @@
   compose healthcheck 已改用 `/ready`。
 - [x] **上机规则扩展**：跳针过长、跳针比例过高、剪线过多、色块过多均给出 warning；
   不阻塞导出，交由制版师判断。
-- [x] **worker 镜像 CI 入口**：新增 `.github/workflows/worker-image.yml`（手动触发）：
-  构建 Dockerfile → 起容器 → `/health` → `/v1/digitize` 冒烟；冒烟脚本已在本机 API
-  验证（2,564 针 / 2 色块）；GitHub run 失败于 `Build image`，
-  **初步判定为 Linux 无 wxPython 4.3.2 wheel，已改用 4.2.5，待重跑验证**。
+- [x] **worker 镜像 CI 入口**：GitHub run `41084822203`：`Build image` ✅、`Run container` ✅、
+  `Smoke test` ❌（待诊断日志）；已增强 smoke 错误输出并上传 `worker-image-diagnostics` artifact。
+- [x] **GitHub ci**：commit `0653c89` 成功；Vitest 已排除 e2e。
 - [x] **ADR-0006 用户决策**：选 **A**——自研编辑器优先，Roidery 仅评估，不替换运行时。
 - [x] **ADR-0006 门槛通过（2026-10-30）**：CI 成功构建 `vectorcraft-cli`（15m 10s，
   DST 4,721 B）；仅证明可构建/最小导出，T-0202 静态评估中。
