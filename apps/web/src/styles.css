@@ -532,6 +532,35 @@ button {
   color: #fefcbf;
 }
 
+.project-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.project-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.project-open {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 5px;
+  padding: 4px 6px;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
 .stage {
   position: relative;
   min-width: 0;

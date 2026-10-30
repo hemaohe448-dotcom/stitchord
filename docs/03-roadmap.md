@@ -49,7 +49,7 @@
 **进展（2026-10-30）**：库调用路径已跑通（无 Inkscape、需 wxPython、输出确定），
 完成 CompileDocument(mm) → SVG(px) → plan/DST 端到端（2 色块/3490 针），
 fill/running/satin + PES，面料预设（woven/knit 实测差异），
-`/v1/digitize` 已接入 3.11 服务并在网页生成（80 tests），12 例自引用黄金语料。
+`/v1/digitize` 已接入 3.11 服务并在网页生成（82 tests），12 例自引用黄金语料。
 详见 `docs/research/inkstitch-headless.md`、`docs/contracts/compile-document.md`、
 `docs/reference/parameters.md`；剩余：Inkscape 参考对比、Linux 镜像、DST 边界针差异固定。
 

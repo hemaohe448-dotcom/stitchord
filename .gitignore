@@ -53,3 +53,7 @@ stitchord-vectorize-*/
 apps/web/test-results/
 apps/web/playwright-report/
 apps/web/blob-report/
+
+*.db
+*.db-wal
+*.db-shm

@@ -144,6 +144,7 @@ GitHub Actions 手动入口：`.github/workflows/worker-image.yml`，会构建�
 | `STITCHORD_CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | CORS 白名单 |
 | `STITCHORD_API_KEY` | 空（不鉴权） | 设置后 `/v1/*` 需 `X-API-Key` |
 | `STITCHORD_RATE_LIMIT` | 0（关闭） | 每客户端每分钟请求数上限 |
+| `STITCHORD_DB_PATH` | 系统临时目录 `/stitchord.db` | SQLite 工程库路径；生产需挂载持久卷 |
 | `STITCHORD_MAX_UPLOAD` | 15 MB（代码常量） | 图片/SVG 上传限制 |
 
 **公网部署必须设置 `STITCHORD_API_KEY` 与 `STITCHORD_RATE_LIMIT`**；当前限流是单进程内存版，

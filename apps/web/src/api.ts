@@ -146,6 +146,47 @@ export async function importSvg(
   return (await response.json()) as VectorizeResult;
 }
 
+export interface ProjectSummary {
+  id: string;
+  name: string;
+  updatedAt: string;
+}
+
+export async function listProjects(): Promise<ProjectSummary[]> {
+  const response = await fetch("/api/v1/projects");
+  if (!response.ok) throw new Error(await readError(response));
+  return (await response.json()) as ProjectSummary[];
+}
+
+export async function saveProject(
+  name: string,
+  document: CompileDocument,
+): Promise<ProjectSummary> {
+  const response = await fetch("/api/v1/projects", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, document }),
+  });
+  if (!response.ok) throw new Error(await readError(response));
+  return (await response.json()) as ProjectSummary;
+}
+
+export async function loadProject(id: string): Promise<{
+  id: string;
+  name: string;
+  document: CompileDocument;
+  updatedAt: string;
+}> {
+  const response = await fetch(`/api/v1/projects/${id}`);
+  if (!response.ok) throw new Error(await readError(response));
+  return await response.json();
+}
+
+export async function deleteProject(id: string): Promise<void> {
+  const response = await fetch(`/api/v1/projects/${id}`, { method: "DELETE" });
+  if (!response.ok) throw new Error(await readError(response));
+}
+
 export async function vectorizeImage(
   file: File,
   widthMm = 100,

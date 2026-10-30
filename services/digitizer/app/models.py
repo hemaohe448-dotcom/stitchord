@@ -87,6 +87,11 @@ class WorksheetRequest(ContractModel):
     hoop: str | None = None
 
 
+class ProjectWrite(ContractModel):
+    name: str = Field(min_length=1, max_length=120)
+    document: dict
+
+
 class Severity(str):
     ERROR = "error"
     WARNING = "warning"

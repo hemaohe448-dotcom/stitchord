@@ -139,6 +139,18 @@ test("100 edits and undos restore an identical DST", async ({ page }) => {
   expect(after).toBe(before);
 });
 
+test("saves and reopens a server project", async ({ page }) => {
+  await openApp(page);
+  const name = `E2E Server ${Date.now()}`;
+  await page.locator("#project-name").fill(name);
+  await page.locator("#project-name").press("Enter");
+  await page.getByRole("button", { name: "保存到服务器" }).click();
+  await expect(page.getByText(new RegExp(`已保存到服务器.*${name}`))).toBeVisible();
+  await page.getByTitle("打开服务器工程").filter({ hasText: name }).click();
+  await expect(page.getByText(/已从服务器打开/)).toBeVisible();
+  await expect(page.locator("#project-name")).toHaveValue(name);
+});
+
 test("exports a DST", async ({ page }) => {
   await openApp(page);
   const button = page.getByRole("button", { name: "导出 DST" });

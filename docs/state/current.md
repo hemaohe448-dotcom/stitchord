@@ -13,7 +13,7 @@
 - [x] 多智能体协作/防幻觉/上下文规范；
 - [x] 前端骨架：DST/PES 导入 → StitchPlan → Canvas 渲染 → 导出 DST；
 - [x] 后端骨架：预览 / 校验 / 导出 API；
-- [x] 测试：前端 17 个单测 + 9 条 Playwright E2E，后端 80 个单测/契约测试（3.11 全量）；
+- [x] 测试：前端 17 个单测 + 10 条 Playwright E2E，后端 82 个单测/契约测试（3.11 全量）；
 - [x] 构建：`tsc --noEmit`、`vite build` 通过；
 - [x] Claude 独立架构评审（`docs/reviews/2026-10-30-architecture-review.md`），阻断项已处置
   （`docs/reviews/2026-10-30-response.md`）；
@@ -41,7 +41,7 @@
   删除、图层排序、撤销/重做、修改后 450ms 自动重编译；编辑结果可导出 DST；
 - [x] **P2 持久化**：工程文档写入 localStorage，刷新后恢复（历史/计划不持久化）；
 - [x] **P1 自引用黄金语料**：12 个文档用例 + 平移/确定性，覆盖 fill/running/satin、面料、
-  参数、三对象；3.11 全量 **80 passed**（尚缺 Inkscape 参考逐针对比）；
+  参数、三对象；3.11 全量 **82 passed**（尚缺 Inkscape 参考逐针对比）；
 - [x] **P3 基线矢量化**：`/v1/vectorize`（Pillow 量化 + VTracer + mm 缩放）→ CompileDocument；
   网页“图片矢量化”按钮；合成图 2 层/2 路径 → 2,956 针/DST 9,407 B；
   现已支持颜色数 2–16、去白底（边缘洪泛填充，兼容非白背景）、
@@ -89,6 +89,8 @@
 - [x] **对象级局部重算 MVP**：按 SVG 叶子元素缓存 Ink/Stitch stitch groups；
   未变对象复用、变更对象重算，plan 组装仍全量以保证与完整编译一致；
   测试：复用 2 个对象时 DST 字节相同；改红块后蓝块 stitches 逐项相同。ADR-0007；
+- [x] **服务端工程库（单租户）**：SQLite `/v1/projects` CRUD；网页“保存到服务器/项目库”；
+  无认证、单进程 SQLite，多租户/权限仍未做；
 - [x] **就绪探针**：`/ready` 检查 Ink/Stitch import；`/health` 仍只表示进程存活，
   compose healthcheck 已改用 `/ready`。
 - [x] **上机规则扩展**：跳针过长、跳针比例过高、剪线过多、色块过多均给出 warning；

@@ -19,10 +19,12 @@ from .convert import read_stitch_plan, write_stitch_file
 from .models import (
     CheckRequest,
     ExportRequest,
+    ProjectWrite,
     StitchPlan,
     ValidationReport,
     WorksheetRequest,
 )
+from . import storage
 from .security import guard
 from .svg_import import import_svg
 from .validation import validate_plan, validate_with_hoop
@@ -114,6 +116,56 @@ def preview_stitch(file: UploadFile = File(...)) -> StitchPlan:
 @app.post("/v1/stitch/validate", response_model=ValidationReport)
 def validate(plan: StitchPlan) -> ValidationReport:
     return validate_plan(plan)
+
+
+def _validated_document(payload: dict) -> CompileDocument:
+    try:
+        document = CompileDocument.model_validate(payload)
+        compile_svg(document)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return document
+
+
+@app.post("/v1/projects")
+def create_project(request: ProjectWrite) -> dict:
+    document = _validated_document(request.document)
+    return storage.create_project(
+        request.name,
+        document.model_dump(by_alias=True, mode="json"),
+    )
+
+
+@app.get("/v1/projects")
+def list_projects() -> list[dict]:
+    return storage.list_projects()
+
+
+@app.get("/v1/projects/{project_id}")
+def get_project(project_id: str) -> dict:
+    project = storage.get_project(project_id)
+    if project is None:
+        raise HTTPException(status_code=404, detail="project not found")
+    return project
+
+
+@app.put("/v1/projects/{project_id}")
+def update_project(project_id: str, request: ProjectWrite) -> dict:
+    document = _validated_document(request.document)
+    if not storage.update_project(
+        project_id,
+        request.name,
+        document.model_dump(by_alias=True, mode="json"),
+    ):
+        raise HTTPException(status_code=404, detail="project not found")
+    return {"id": project_id, "name": request.name}
+
+
+@app.delete("/v1/projects/{project_id}", status_code=204)
+def delete_project(project_id: str) -> Response:
+    if not storage.delete_project(project_id):
+        raise HTTPException(status_code=404, detail="project not found")
+    return Response(status_code=204)
 
 
 @app.post("/v1/stitch/check", response_model=ValidationReport)

@@ -174,6 +174,8 @@ pyembroidery 只用于导入、round-trip 验证与独立回归，不作为第�
 | --- | --- | --- | --- |
 | GET | `/health` | ✅ | 进程存活（不检查 Ink/Stitch） |
 | GET | `/ready` | ✅ | Ink/Stitch 可导入才 200，否则 503 |
+| POST/GET | `/v1/projects` | ✅ P4 单租户 | SQLite 工程库 CRUD |
+| GET/PUT/DELETE | `/v1/projects/{id}` | ✅ P4 单租户 | 读取/更新/删除工程 |
 | POST | `/v1/stitch/preview` | ✅ | 上传 DST/PES/… → StitchPlan |
 | POST | `/v1/stitch/validate` | ✅ | 静态规则校验 |
 | POST | `/v1/stitch/export` | ✅ | StitchPlan → DST/EXP/… |

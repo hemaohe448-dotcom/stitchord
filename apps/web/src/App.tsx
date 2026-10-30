@@ -7,12 +7,16 @@ import {
   downloadWorksheet,
   digitizeDocument,
   digitizeExport,
+  deleteProject,
   exportStitch,
   importSvg,
+  listProjects,
+  loadProject,
   previewStitch,
+  saveProject,
   vectorizeImage,
 } from "./api";
-import type { ValidationIssue } from "./api";
+import type { ProjectSummary, ValidationIssue } from "./api";
 import { StitchCanvas } from "./canvas/StitchCanvas";
 import { parseCurve } from "./curve";
 import { FABRICS } from "./sampleDoc";
@@ -118,6 +122,8 @@ export default function App() {
   const [playing, setPlaying] = useState(false);
   const [playIndex, setPlayIndex] = useState(0);
   const [playSpeed, setPlaySpeed] = useState(240);
+  const [projects, setProjects] = useState<ProjectSummary[]>([]);
+  const [showProjects, setShowProjects] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState("示例工程 · 正在生成针迹…");
 
@@ -215,6 +221,55 @@ export default function App() {
       cancelled = true;
     };
   }, [plan, hoop]);
+
+  async function onSaveToServer() {
+    if (!doc) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const name =
+        doc.name?.trim() || `工程 ${new Date().toLocaleString("zh-CN")}`;
+      const saved = await saveProject(name, doc);
+      setNotice(`已保存到服务器 · ${saved.name}`);
+      setProjects(await listProjects());
+      setShowProjects(true);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onRefreshProjects() {
+    try {
+      setProjects(await listProjects());
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    }
+  }
+
+  async function onOpenServerProject(id: string) {
+    setBusy(true);
+    setError(null);
+    try {
+      const project = await loadProject(id);
+      setDoc(project.document);
+      setNotice(`已从服务器打开 · ${project.name}`);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onDeleteServerProject(id: string) {
+    try {
+      await deleteProject(id);
+      setProjects((items) => items.filter((item) => item.id !== id));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    }
+  }
 
   async function handleFile(file: File) {
     setBusy(true);
@@ -521,6 +576,54 @@ export default function App() {
               hidden
             />
             <p className="hint">{notice}</p>
+            <div className="button-row">
+              <button
+                type="button"
+                className="button"
+                onClick={() => void onSaveToServer()}
+                disabled={!doc || busy}
+              >
+                保存到服务器
+              </button>
+              <button
+                type="button"
+                className="button"
+                onClick={() => {
+                  setShowProjects((value) => !value);
+                  if (!showProjects) void onRefreshProjects();
+                }}
+              >
+                项目库
+              </button>
+            </div>
+            {showProjects ? (
+              <div className="project-list">
+                {projects.length === 0 ? (
+                  <p className="hint">暂无服务器工程</p>
+                ) : (
+                  projects.map((project) => (
+                    <div className="project-row" key={project.id}>
+                      <button
+                        type="button"
+                        className="project-open"
+                        onClick={() => void onOpenServerProject(project.id)}
+                        title="打开服务器工程"
+                      >
+                        {project.name}
+                      </button>
+                      <button
+                        type="button"
+                        className="icon-button"
+                        onClick={() => void onDeleteServerProject(project.id)}
+                        title="删除服务器工程"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            ) : null}
           </section>
 
           <section>
