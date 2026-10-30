@@ -13,6 +13,8 @@ import threading
 from dataclasses import dataclass
 from pathlib import Path
 
+from . import cache
+
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _import_checked = False
 _import_ok = False
@@ -25,6 +27,7 @@ class DigitizeResult:
     sha256: str
     writer: str = "inkstitch"
     cached: bool = False
+    groups_reused: int = 0
 
 
 def _prepare_paths() -> None:
@@ -140,15 +143,40 @@ def digitize_svg(svg_path: Path, dst_path: Path, dpi: float = 96.0) -> DigitizeR
     root = document.getroot()
 
     groups = []
+    groups_reused = 0
+    from lxml import etree
+
+    context = "|".join(
+        str(root.get(attribute, ""))
+        for attribute in ("width", "height", "viewBox", "version")
+    )
+
     for node in root.iter():
         if node is root or len(node) != 0:
             continue
+        key = None
+        try:
+            key = hashlib.sha256(
+                etree.tostring(node) + b"\0" + context.encode("utf-8")
+            ).hexdigest()
+        except Exception:  # noqa: BLE001 - cache is best-effort
+            key = None
+        if key:
+            cached_groups = cache.get_groups(key)
+            if cached_groups is not None:
+                groups.extend(cached_groups)
+                groups_reused += 1
+                continue
+        element_groups = []
         try:
             elements = node_to_elements(node)
         except Exception:  # noqa: BLE001 - unsupported leaf
-            continue
+            elements = []
         for element in elements:
-            groups.extend(element.embroider(None))
+            element_groups.extend(element.embroider(None))
+        if key:
+            cache.put_groups(key, element_groups)
+        groups.extend(element_groups)
     if not groups:
         raise ValueError("no embroiderable elements found in SVG")
 
@@ -176,4 +204,5 @@ def digitize_svg(svg_path: Path, dst_path: Path, dpi: float = 96.0) -> DigitizeR
         dst=payload,
         sha256=hashlib.sha256(payload).hexdigest(),
         writer=writer,
+        groups_reused=groups_reused,
     )

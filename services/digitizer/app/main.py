@@ -234,6 +234,7 @@ def _digitize_document(document: CompileDocument, suffix: str = "dst"):
             sha256=cached.sha256,
             writer=cached.writer,
             cached=True,
+            groups_reused=cached.groups_reused,
         )
     work_dir: Path | None = None
     try:
@@ -290,6 +291,7 @@ def digitize_export(
             "X-Stitch-Sha256": result.sha256,
             "X-Stitch-Format": format,
             "X-Stitch-Cache": "hit" if result.cached else "miss",
+            "X-Stitch-Groups-Reused": str(result.groups_reused),
         },
     )
 

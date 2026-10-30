@@ -13,7 +13,7 @@
 - [x] 多智能体协作/防幻觉/上下文规范；
 - [x] 前端骨架：DST/PES 导入 → StitchPlan → Canvas 渲染 → 导出 DST；
 - [x] 后端骨架：预览 / 校验 / 导出 API；
-- [x] 测试：前端 17 个单测 + 9 条 Playwright E2E，后端 79 个单测/契约测试（3.11 全量）；
+- [x] 测试：前端 17 个单测 + 9 条 Playwright E2E，后端 80 个单测/契约测试（3.11 全量）；
 - [x] 构建：`tsc --noEmit`、`vite build` 通过；
 - [x] Claude 独立架构评审（`docs/reviews/2026-10-30-architecture-review.md`），阻断项已处置
   （`docs/reviews/2026-10-30-response.md`）；
@@ -41,7 +41,7 @@
   删除、图层排序、撤销/重做、修改后 450ms 自动重编译；编辑结果可导出 DST；
 - [x] **P2 持久化**：工程文档写入 localStorage，刷新后恢复（历史/计划不持久化）；
 - [x] **P1 自引用黄金语料**：12 个文档用例 + 平移/确定性，覆盖 fill/running/satin、面料、
-  参数、三对象；3.11 全量 **79 passed**（尚缺 Inkscape 参考逐针对比）；
+  参数、三对象；3.11 全量 **80 passed**（尚缺 Inkscape 参考逐针对比）；
 - [x] **P3 基线矢量化**：`/v1/vectorize`（Pillow 量化 + VTracer + mm 缩放）→ CompileDocument；
   网页“图片矢量化”按钮；合成图 2 层/2 路径 → 2,956 针/DST 9,407 B；
   现已支持颜色数 2–16、去白底（边缘洪泛填充，兼容非白背景）、
@@ -86,6 +86,9 @@
 - [x] **图层锁定**：锁定后画布不可选中/拖动/节点编辑，仍参与编译；对象级锁定继续保留；
 - [x] **工程名/订单抬头**：`CompileDocument.name` 可编辑、随工程 JSON 保存，
   工艺单 PDF 抬头使用该名称（空则 Stitchord Design）；中文抬头用 STSong CID 字体；
+- [x] **对象级局部重算 MVP**：按 SVG 叶子元素缓存 Ink/Stitch stitch groups；
+  未变对象复用、变更对象重算，plan 组装仍全量以保证与完整编译一致；
+  测试：复用 2 个对象时 DST 字节相同；改红块后蓝块 stitches 逐项相同。ADR-0007；
 - [x] **就绪探针**：`/ready` 检查 Ink/Stitch import；`/health` 仍只表示进程存活，
   compose healthcheck 已改用 `/ready`。
 - [x] **上机规则扩展**：跳针过长、跳针比例过高、剪线过多、色块过多均给出 warning；
@@ -105,13 +108,13 @@
 - [ ] P1 收尾：Inkscape 参考逐针对比、DST 边界针差异固定测试、性能与错误输入；
 - [ ] T-0202 Roidery 集成评估（CLI/MCP 输入、DST 读回、许可证、部署体积、跨平台）；
 - [ ] 生产硬化：认证/配额/请求体上限、SVG 实体防护、CI 去 skip、真实上机试缝；
-- [ ] P2 剩余：局部重算、100 步 undo 上限、Playwright 主流程。
+- [ ] P2 剩余：锁定/合并/布尔、起收针/锁针、密度、性能预算。
 
 ## 下一步（按优先级）
 
 1. **T-0202 Roidery 集成评估**：CLI/MCP 输入、DST 读回、许可证、部署体积、跨平台。
 2. **Worker 镜像/CI**：在 GitHub Actions 构建 Dockerfile，跑 `/v1/digitize` 冒烟。
-3. **P2/P3**：局部重算、ML 分割与质量基准。
+3. **P2/P3**：锁定/布尔、ML 分割与质量基准。
 4. **生产硬化**：认证/限流、请求体上限、SVG 消毒与超时。
 
 ## 阻塞 / 风险

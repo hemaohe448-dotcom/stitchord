@@ -49,7 +49,7 @@
 **进展（2026-10-30）**：库调用路径已跑通（无 Inkscape、需 wxPython、输出确定），
 完成 CompileDocument(mm) → SVG(px) → plan/DST 端到端（2 色块/3490 针），
 fill/running/satin + PES，面料预设（woven/knit 实测差异），
-`/v1/digitize` 已接入 3.11 服务并在网页生成（79 tests），12 例自引用黄金语料。
+`/v1/digitize` 已接入 3.11 服务并在网页生成（80 tests），12 例自引用黄金语料。
 详见 `docs/research/inkstitch-headless.md`、`docs/contracts/compile-document.md`、
 `docs/reference/parameters.md`；剩余：Inkscape 参考对比、Linux 镜像、DST 边界针差异固定。
 
@@ -84,7 +84,7 @@ fill/running/satin + PES，面料预设（woven/knit 实测差异），
 复制对象与键盘快捷键、曲线/折线节点编辑、自由绘制走线、图层/对象显隐锁定、
 图层复制/改名/合并/锁定、工程名/订单抬头、打底预览开关、多选与批量操作、SVG 导入、针迹播放预览、
 running/satin 参数（针距/线宽/密度/拉布补偿/打底）、导出。
-**未实现**：锁定/合并/布尔、起收针/锁针、密度、局部重算。
+**未实现**：锁定/合并/布尔、起收针/锁针、密度、跨进程/plan 组装级局部重算。
 
 **已部分实现**：undo 栈统一截到 100 步（`pushHistory`，前端 17 tests）；
 Playwright 9 条主流程通过（2026-10-30，41.5s），含“100 次移动+100 次撤销后 DST 哈希一致”。
@@ -101,7 +101,7 @@ DST 4,721 B）。仅证明可构建/最小导出；接入评估见 `docs/tasks/T
 - 对象编辑（节点、变换、布尔、复制）；
 - 针迹参数面板（绣法、角度、行距、密度、打底、补偿、起收针、锁针）；
 - 命令栈（100 步 undo/redo）、自动保存、冲突提示；
-- 局部重算（只重算受影响对象）。
+- 局部重算（对象级 stitch-group 缓存，plan 组装仍全量；ADR-0007）。
 
 **验收标准**
 
@@ -109,7 +109,8 @@ DST 4,721 B）。仅证明可构建/最小导出；接入评估见 `docs/tasks/T
 - [x] **P2-AC2** 100 步 undo/redo 后文档 hash 与初始一致；重做栈行为符合规范。
   （E2E：100 次移动 + 100 次撤销，导出 DST SHA-256 相同）
 - [ ] **P2-AC3** 10 万针文档：平移/缩放中位帧率 ≥ 50 FPS，输入延迟 P95 < 50 ms（Chrome，GTX 1050 Ti 级；记录机器编号与测量脚本路径）。
-- [ ] **P2-AC4** 修改单对象参数只重算该对象；其他色块针迹 hash 不变。
+- [x] **P2-AC4（MVP）** 修改单对象参数时，未变对象复用 stitch groups；变更对象重算；
+  其他色块 stitches 逐项不变。plan 组装仍全量，见 ADR-0007。
 - [x] **P2-AC5** Playwright 覆盖 9 条主流程（导入、建层、改参数、撤销、
   对象隐藏/锁定、图层复制改名合并、100 步撤销 hash、导出）全部通过。
 - [ ] **P2-AC6** 无阻塞性可访问性问题（键盘可达图层/参数；对比度 AA）。

@@ -5,6 +5,7 @@ import pyembroidery
 from fastapi.testclient import TestClient
 
 from app import cache, inkstitch_adapter
+from app.compiler import CompileDocument, compile_svg
 from app.main import app
 
 client = TestClient(app)
@@ -140,6 +141,36 @@ def test_export_cache_hit():
     assert first.headers["X-Stitch-Cache"] == "miss"
     assert second.headers["X-Stitch-Cache"] == "hit"
     assert first.content == second.content
+
+
+@needs_inkstitch
+def test_object_group_cache_reuses_unchanged_objects(tmp_path):
+    document = CompileDocument.model_validate(DOCUMENT)
+    cache.clear()
+    cache.clear_groups()
+
+    first_svg = tmp_path / "first.svg"
+    first_svg.write_text(compile_svg(document), encoding="utf-8")
+    first = inkstitch_adapter.digitize_svg(first_svg, tmp_path / "first.dst")
+
+    second_svg = tmp_path / "second.svg"
+    second_svg.write_text(compile_svg(document), encoding="utf-8")
+    second = inkstitch_adapter.digitize_svg(second_svg, tmp_path / "second.dst")
+
+    assert second.groups_reused == 2
+    assert second.dst == first.dst
+
+    document.layers[0].objects[0].translate_mm = (5, 0)
+    third_svg = tmp_path / "third.svg"
+    third_svg.write_text(compile_svg(document), encoding="utf-8")
+    third = inkstitch_adapter.digitize_svg(third_svg, tmp_path / "third.dst")
+
+    assert third.groups_reused >= 1
+    assert third.dst != first.dst
+
+    blue_first = first.plan["colorBlocks"][1]["stitches"]
+    blue_third = third.plan["colorBlocks"][1]["stitches"]
+    assert blue_first == blue_third
 
 
 @needs_inkstitch

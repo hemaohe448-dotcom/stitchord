@@ -12,6 +12,10 @@ _MAX_ENTRIES = 32
 _cache: OrderedDict[str, DigitizeResult] = OrderedDict()
 _lock = threading.Lock()
 
+_MAX_GROUP_ENTRIES = 256
+_group_cache: OrderedDict[str, list] = OrderedDict()
+_group_lock = threading.Lock()
+
 
 def key_for(document, suffix: str) -> str:
     payload = document.model_dump_json(by_alias=True).encode("utf-8")
@@ -38,3 +42,25 @@ def put(key: str, result: DigitizeResult) -> None:
 def clear() -> None:
     with _lock:
         _cache.clear()
+
+
+def get_groups(key: str):
+    with _group_lock:
+        groups = _group_cache.get(key)
+        if groups is None:
+            return None
+        _group_cache.move_to_end(key)
+        return groups
+
+
+def put_groups(key: str, groups: list) -> None:
+    with _group_lock:
+        _group_cache[key] = groups
+        _group_cache.move_to_end(key)
+        while len(_group_cache) > _MAX_GROUP_ENTRIES:
+            _group_cache.popitem(last=False)
+
+
+def clear_groups() -> None:
+    with _group_lock:
+        _group_cache.clear()
