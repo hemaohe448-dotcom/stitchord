@@ -15,6 +15,9 @@ jobs:
       - name: Build image
         run: docker build --progress=plain -t stitchord-digitizer ./services/digitizer
 
+      - name: Import check
+        run: docker run --rm stitchord-digitizer python -c "import app.main; print('app import ok')"
+
       - name: Run container
         run: |
           docker run -d --name digitizer -p 8000:8000 stitchord-digitizer
