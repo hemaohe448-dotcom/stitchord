@@ -80,7 +80,10 @@
   对象隐藏锁定/导出）全部通过，30.7s；证据 `apps/web/e2e/app.spec.ts`；
 - [x] **对象级隐藏/锁定**：隐藏对象不参与编译，锁定对象不可在画布选中/拖动/节点编辑；
   编译器有 hidden 回归测试；
-- [x] **针法参数面板扩展**：running 针距/线宽，satin 密度/拉布补偿，fill/satin 打底开关。
+- [x] **针法参数面板扩展**：running 针距/线宽，satin 密度/拉布补偿，fill/satin 打底开关；
+- [x] **worker 镜像 CI 入口**：新增 `.github/workflows/worker-image.yml`（手动触发）：
+  构建 Dockerfile → 起容器 → `/health` → `/v1/digitize` 冒烟；冒烟脚本已在本机 API
+  验证（2,564 针 / 2 色块），**镜像本身尚未构建**。
 - [x] **ADR-0006 用户决策**：选 **A**——自研编辑器优先，Roidery 仅评估，不替换运行时。
 - [x] **ADR-0006 门槛通过（2026-10-30）**：CI 成功构建 `vectorcraft-cli`（15m 10s，
   DST 4,721 B）；仅证明可构建/最小导出，T-0202 静态评估中。

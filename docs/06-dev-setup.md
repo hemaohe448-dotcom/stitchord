@@ -133,6 +133,9 @@ Phase 1 的 digitizer 镜像会包含固定 commit 的 Ink/Stitch；镜像 diges
 **注意（2026-10-30）**：Dockerfile 已写（固定 Ink/Stitch/inkex + GTK/wx），但本机无 Docker，
 **尚未构建验证**；首次构建请记录输出，失败时先修 Dockerfile，不要把“镜像可用”当成事实。
 
+GitHub Actions 手动入口：`.github/workflows/worker-image.yml`，会构建镜像、
+启动容器并跑 `/health` + `/v1/digitize` 冒烟。需要在上传后的仓库 Actions 页面手动触发。
+
 ## 7. 环境变量
 
 | 变量 | 默认 | 用途 |
