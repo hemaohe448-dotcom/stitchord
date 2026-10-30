@@ -27,6 +27,7 @@ __pycache__/
 .cache/
 .tmp/
 .venv/
+.condaenv/
 .pytest-tmp/
 
 # local artifacts

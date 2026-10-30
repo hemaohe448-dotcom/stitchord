@@ -1,9 +1,9 @@
 # T-0101：Ink/Stitch 无头编译 spike
 
-状态: todo
+状态: doing
 负责人: Builder（Codex/DSH 子代理）
 依赖: 无（P1 入口）
-对应验收: P1-AC1 … P1-AC7
+对应验收: P1-AC1 … P1-AC8
 
 ## 目标
 
@@ -52,6 +52,24 @@
 - `docs/research/inkstitch-cli.md`（命令 + 输出）
 - `artifacts/p1/`（生成的 DST、JSON、对比报告；不入库）
 - CI 日志 / 本地命令输出
+
+## 进展（2026-10-30）
+
+已完成步骤 1–4 的“库调用”分支：
+
+- Python 3.11.18 + Ink/Stitch `d225262` + inkex `a887f9d` + wxPython 4.3.2 可导入；
+- 直接调用 `node_to_elements → embroider → stitch_groups_to_stitch_plan → write_embroidery_file`，
+  不经过 Inkscape 与 `inkstitch.py`；
+- 10 px 矩形：1 色块 / 48 针 / DST 662 B；
+- 两条彩色路径：2 色块 / 419 针 / DST 1781 B；
+- 连续两次运行 DST SHA-256 一致（确定性成立）；
+- 发现 wxPython 是 import 链硬依赖（tartan + sew_stack），最小惰性化补丁不可行；
+- 发现必须关闭 Ink/Stitch 磁盘缓存；plan 为 px，DST 为 0.1 mm 且居中。
+
+证据：`docs/research/inkstitch-headless.md`、`tools/spike/`、`artifacts/p1/`。
+
+**结论**：放弃 CLI 入口，P1 改为“worker 内直接调用库”。剩余：satin/running/underlay、
+参数映射、PES、12 份黄金语料、性能与 Linux 镜像。
 
 ## 风险与未知
 

@@ -114,6 +114,10 @@ export function StitchCanvas({
         } else if (stitch.command === "TRIM") {
           ctx.moveTo(point.x, point.y);
           afterTrim = true;
+        } else if (stitch.command === "END" || stitch.command === "STOP") {
+          afterTrim = true;
+          hasPoint = false;
+          continue;
         } else {
           ctx.moveTo(point.x, point.y);
           afterTrim = false;

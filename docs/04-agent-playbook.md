@@ -122,13 +122,15 @@ Reviewer 必须回答：
 ```bash
 claude -p "你是独立架构评审。只读以下文件：docs/02-architecture.md, docs/03-roadmap.md, services/digitizer/app/convert.py。按 docs/04-agent-playbook.md 的红队清单输出：阻断项/建议/证据缺口。不要修改文件。" \
   --allowedTools "Read,Grep,Glob" \
+  --permission-mode plan \
+  --permission-prompts none \
+  --max-turns 30 \
   --output-format text
 ```
 
-约定：
-- 评审输出写入 `docs/reviews/<date>-<topic>.md`，由 Orchestrator 逐条关闭；
-- Claude 不直接改代码；如需要它写，另开任务并明确文件白名单；
-- 每次评审 ≤ 1 次调用，避免“评审马拉松”。
+> 实测：不加 `--permission-mode plan --permission-prompts none` 时，`claude -p` 可能在目录信任/
+> 权限提示处挂起且无输出。评审必须设置超时（≤5 分钟），失败不重试超过一次。
+> 评审结果存 `docs/reviews/`，由 Orchestrator 逐条关闭；Claude 不直接改代码。
 
 ### 6.2 Codex（待接入）
 

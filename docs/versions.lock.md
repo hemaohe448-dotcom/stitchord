@@ -27,6 +27,19 @@
 | pyembroidery | 1.5.1 | pip |
 | python-multipart | 0.0.32 | pip |
 
+## Phase 1 无头验证（2026-10-30）
+
+| 依赖 | 版本 | 说明 |
+| --- | --- | --- |
+| Python | 3.11.18 | conda-forge，`.condaenv` |
+| inkex | `a887f9d4c8adacd62786e4f46c8ef1467bedc1df` | `CapellanCitizen/extensions` |
+| wxPython | 4.3.2 | import 链必需（非 GUI 使用） |
+| pystitch | 1.0.1 | Ink/Stitch 的 IO 层 |
+| shapely | 2.2.0 | 几何 |
+| numpy | 2.2.6 | 固定版本 |
+
+证据与命令：`docs/research/inkstitch-headless.md`、`tools/spike/`。
+
 ## 待锁定（P1）
 
 - [ ] Ink/Stitch 运行镜像 digest；

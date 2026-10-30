@@ -57,17 +57,21 @@ Phase 0 把 digitizer 作为唯一后端；Phase 4 再拆出独立业务 API，�
 ```text
 Project
 └── Artwork（画布：宽高 mm、hoop、背景）
-    ├── Layer（顺序、可见、锁定、颜色）
+    ├── Layer（顺序、可见、锁定、默认线色）
     │   └── Object（路径 / 组 / 文字 / 位图源）
-    │       ├── geometry: 贝塞尔路径（mm，Y 向下）
-    │       ├── stitch: { type, angle, rowSpacing, density, underlay,
-    │       │            pullComp, minStitch, tieIn, tieOff, start/end }
-    │       └── source: 可选，指向原始位图/矢量化任务
+    │       ├── color:     线色（权威值；Layer 默认色可被覆盖）
+    │       ├── geometry:  贝塞尔路径（mm，Y 向下）
+    │       ├── stitch: { type, angleDeg, rowSpacingMm, densityMm,
+    │       │            underlay, pullCompMm, minStitchMm, tieIn, tieOff }
+    │       └── source:    可选，指向原始位图/矢量化任务
     └── Metadata（作者、机型、线色目录、版本）
 ```
 
 规则：
+- **颜色在 Object 上**，Layer 只提供默认值；一个 Object 产生一个颜色块。
 - 一个 Object 只产生一个颜色块；同色对象可在导出时合并（由 sequencer 决定）。
+- `rowSpacingMm` 是填充行距，`densityMm` 是缎面/针脚间距，两者不可混用。
+- 画布必须落在声明的 hoop 内；超出时必须走“分框”流程（Phase 5），否则校验拒绝。
 - 图层顺序即默认缝制顺序；`sequencer` 可重排以减少换色/跳针，但必须可解释、可回退。
 - 文档以 JSON 存储（`.stitchord` zip：`project.json` + `assets/` + `thumbnail.png`），带 `schemaVersion` 与迁移函数。
 - 文档**不存生成后的针迹**；只存缓存 hash，缓存失效即重算。
@@ -77,16 +81,17 @@ Project
 ```json
 {
   "schemaVersion": "1.0",
-  "artwork": { "widthMm": 120, "heightMm": 120, "hoop": "100x100" },
+  "artwork": { "widthMm": 100, "heightMm": 100, "hoop": "100x100" },
   "layers": [
     {
       "id": "layer-1",
       "name": "花瓣",
-      "color": { "hex": "#dd6b20", "brand": "Isacord", "code": "1104" },
+      "defaultColor": { "hex": "#dd6b20" },
       "objects": [
         {
           "id": "obj-1",
           "kind": "path",
+          "color": { "hex": "#dd6b20", "brand": "Isacord", "code": "1104" },
           "geometry": { "closed": true, "nodes": [] },
           "stitch": { "type": "satin", "angleDeg": 45, "densityMm": 0.4 }
         }
@@ -104,24 +109,42 @@ Project
 Document(JSON)
   └─ compile_svg()  →  Ink/Stitch 兼容 SVG（96dpi，带参数属性）
         └─ worker: inkstitch --extension=output --format=dst  →  DST 字节
-        └─ worker: stitch_plan_json 扩展                     →  StitchPlan JSON
+        └─ worker: stitch_plan_json 扩展                     →  StitchPlan JSON（权威）
 ```
+
+**单一真相**：`StitchPlan` 由 worker 内的 Ink/Stitch 管线生成一次；预览与导出都消费这一份计划。
+pyembroidery 只用于导入、round-trip 验证与独立回归，不作为第二条生产导出路径。
+若两者的 DST 字节出现差异，以 Ink/Stitch 产物为准并调查差异，不得并行维护两套几何。
 
 ### 5.2 规则
 
 - **参数属性名不得凭记忆写**。Phase 1 的第一件事是从 Ink/Stitch 源码与 `.inx` 文件中提取
   真实属性名/默认值/单位，生成 `docs/contracts/inkstitch-params.md` 与映射表，并用契约测试锁定。
+- **wxPython 风险**：`lib/extensions/__init__.py` 会 import 全部扩展，其中 `params.py:15` 顶层
+  `import wx`。因此“无 Inkscape GUI”不等于“无 wx/GTK 依赖”；镜像必须安装 wxPython/GTK，或对
+  扩展加载做惰性化补丁。P1 必须先验证这一点（T-0101）。
 - 单位换算只允许在 `compile_svg` 一处发生；任何模块不得硬编码 96 / 25.4。
 - 输出的 SVG 必须能被固定版本的 Ink/Stitch 读取；解析失败要返回可定位的错误（元素 id + 原因）。
 - 针迹计划 JSON 通过在 worker 内新增一个只读扩展实现（GPL，补丁公开），不改 Ink/Stitch 的绣法逻辑。
 - 每次编译记录：文档 hash、编译器版本、Ink/Stitch commit、参数快照、输出 hash。
+- 机器文件内**不得**写入时间戳；DST 头里的名称必须固定/来自文档 id，否则字节级回归失效。
 
 ### 5.3 契约测试（Phase 1 验收核心）
 
-准备一批“黄金 SVG”（覆盖 running / satin / fill / underlay / 多色 / 跳针 / 锁针），分别：
-1. 用 Inkscape + Ink/Stitch 原生产出参考 DST；
-2. 用我们的编译器产出 DST；
-3. 比较：针数、色块数、换色数、包围盒（≤0.1 mm）、逐针坐标（容差 ≤0.05 mm）、文件 hash 稳定性。
+输入是**黄金 JSON 文档**，不是 SVG（SVG 是被测编译器的输出）。每份用例包含：
+
+- `input.json`：图层/对象/绣法参数；
+- `reference.svg`：人工确认过的 Ink/Stitch 兼容 SVG；
+- `reference.dst`：用参考环境（Inkscape + 固定 Ink/Stitch）导出的 DST。
+
+验证链：
+1. `compile_svg(input.json)` 与 `reference.svg` 的结构/参数等价（属性级对比）；
+2. 编译产物与 `reference.dst` 比较：针数、色块数、换色数、包围盒（同 writer 时要求 ≤0.1 mm）；
+3. 同一 writer 下逐针坐标比较：按 0.1 mm 量化后必须**完全一致**（不是 0.05 mm 容差，
+   因为 0.05 mm 小于 DST 分辨率）；
+4. 不同 writer（Ink/Stitch vs pyembroidery）只比较针数/色块/换色与包围盒，并允许 ≤1% 针数差；
+   逐针坐标不跨 writer 比较；
+5. 连续 3 次编译输出字节级一致（固定 DST 头名称，排除时间戳）。
 
 任何一项不达标即阻断合并。
 

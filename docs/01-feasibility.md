@@ -15,16 +15,18 @@
 | --- | --- | --- | --- |
 | F1 | Ink/Stitch 采用 GPL-3.0 | `inkstitch/LICENSE:1-2`；仓库根 LICENSE | 高 |
 | F2 | Ink/Stitch 要求 Python ≥3.11，依赖 pystitch / inkex / shapely / wxPython 等 | `inkstitch/pyproject.toml:4-33` | 高 |
-| F3 | Ink/Stitch 以 Inkscape 扩展方式运行，按 `--extension=<name>` 反射实例化扩展类 | `inkstitch/inkstitch.py:127-147` | 高 |
+| F3 | Ink/Stitch 以 Inkscape 扩展方式运行：`from lib import extensions` 在 `:131` 导入全部扩展，`:137-147` 按 `--extension=<name>` 反射实例化 | `inkstitch/inkstitch.py:131-147` | 高 |
 | F4 | 导出扩展把机器文件二进制写到 stdout，由 Inkscape 落盘 | `inkstitch/lib/extensions/output.py:39-75` | 高 |
 | F5 | 绣法模块覆盖 running / satin / fill / tatami / contour / guided / meander / ripple / cross-stitch / tartan 等 | `inkstitch/lib/stitches/`（14 个模块） | 高 |
-| F6 | 存在离线脚本开关 `INKSTITCH_OFFLINE_SCRIPT`，说明官方考虑无 GUI 调用 | `inkstitch/inkstitch.py:75-79` | 高 |
+| F6 | `INKSTITCH_OFFLINE_SCRIPT` 只切换调试器/脚本生成路径，**不能**证明官方支持无 GUI 调用 | `inkstitch/inkstitch.py:75-101` | 高（反向证据） |
 | F7 | Embroiderly 自我定义为“cross-stitch patterns”桌面应用 | `embroiderly/README.md:5` | 高 |
 | F8 | Embroiderly 源码 GPL-3.0-or-later；文档 CC-BY-SA-4.0 | `embroiderly/README.md:24-33` | 高 |
 | F9 | Embroiderly 是 web-first：Vue + Wasm + Tauri，核心编辑在 Rust/WASM | `embroiderly/ARCHITECTURE.md:3-37` | 高 |
 | F10 | Embroiderly 的图像导入面向十字绣图纸 | `embroiderly/packages/image-import/README.md:3` | 高 |
 | F11 | pyembroidery 1.5.1 命令常量：STITCH=0, JUMP=1, TRIM=2, STOP=3, END=4, COLOR_CHANGE=5, NEEDLE_AT=177 | 本机实测，见 `docs/research/pyembroidery-notes.md` | 高 |
 | F12 | pyembroidery 内部坐标单位 0.1 mm；写入 DST 后读回可保持 0.1 mm 精度 | 本机 round-trip 测试 `services/digitizer/tests/test_convert.py` | 高 |
+| F13 | 扩展包 import 时即加载 wxPython（`params.py:15`），因此无 wx 的容器会在导入阶段失败 | `inkstitch/lib/extensions/__init__.py:6-20`、`lib/extensions/params.py:15` | 高 |
+| F14 | DST 单条记录最大位移 121 × 0.1 mm = 12.1 mm | `pyembroidery/DstWriter.py:7-8` | 高 |
 
 ### 关于 “Roidery”
 
@@ -41,9 +43,10 @@
 | Embroiderly | 十字绣图纸设计器（web-first） | 图层交互、画布性能方案、WASM 计算分层、工程化程度 | 数据模型是十字绣格针；不是 DST 针迹编辑器；GPL |
 | Roidery | 未知 | 未知 | 不能纳入架构，待确认 |
 
-**给用户的直说**：你喜欢的“Embroiderly 的 Illustrator 风格”可以做成我们的编辑体验，但不能把
-Embroiderly 当机器绣花编辑器直接用。我们要做的是“Illustrator 式图层 + Ink/Stitch 的针迹内核”，
-这是一个新的编辑器，而不是换皮。
+**给用户的直说**：你喜欢的“Illustrator 风格”是一种交互目标，但**没有证据表明 Embroiderly 实现了
+机器绣花式的图层针迹编辑**——它的 `ARCHITECTURE.md:30` 里的 “layers” 指的是软件分层，不是绣花图层。
+因此我们借鉴的是“图层化编辑”的产品方向，而不是它的实现；不能把 Embroiderly 当机器绣花编辑器直接用。
+我们要做的是“Illustrator 式图层 + Ink/Stitch 的针迹内核”，这是一个新的编辑器，而不是换皮。
 
 ## 4. 整合方案对比
 
@@ -76,12 +79,18 @@ Stitchord 文档(JSON) --compile--> Ink/Stitch SVG --Ink/Stitch CLI--> StitchPla
 ## 5. 许可证与商业化
 
 - Ink/Stitch：GPL-3.0；Embroiderly：GPL-3.0-or-later。
-- **SaaS 不构成 GPL 的“分发”**，但以下行为会触发义务：提供桌面/私有化安装包、分发修改过的
-  Ink/Stitch 二进制、把 GPL 代码静态链接进闭源产品。
+- **SaaS 不构成 GPL 的“分发”**；但以下行为会触发义务：向客户交付含 Ink/Stitch 的私有化镜像、
+  分发修改过的 Ink/Stitch 二进制、把 GPL 模块 import 进同一进程形成结合作品。
+- Python 没有 C 语言意义上的“静态链接”；判断边界看是否同一进程、是否共享数据结构、是否构成
+  衍生作品。**独立进程 + 文件/JSON 契约**是目前较可辩护的隔离方式，但仍需律师逐案确认。
 - 我们自己的代码选择 **GPL-3.0-or-later**：可以直接复用/修改 GPL 生态，法律路径最简单；
   商业化靠托管服务、支持、模板与算力，而不是靠闭源许可证。
-- 如果未来必须闭源：需要把 Ink/Stitch 严格隔离为独立进程（不链接、不分发其代码），
-  并 clean-room 重写编辑器与编译层；这是一次架构级重做，不是改 LICENSE 文件。
+- **贡献者授权**：仓库目前没有 CLA/DCO。若未来需要重新授权（例如闭源双许可），必须现在就加
+  DCO/CLA，否则无法单方面改变已合并贡献的许可证。
+- 如果未来必须闭源：自有编辑器/编译器可以保持专有（前提是未复制 GPL 代码），Ink/Stitch 继续作为
+  独立进程且不随产品分发；若必须随私有化交付，则整个分发包需满足 GPL。**不需要“重写编辑器”**，
+  但需要严格审计代码来源与模型许可证。
+- ML 模型/权重也要做许可证审计（例如部分分割/抠图模型禁止商用）；未确认前不得进入生产链路。
 
 > 待人类确认：商业模式是否允许 GPL？若投资方要求闭源，请在 Phase 0 决策，否则后期返工成本极高。
 
@@ -97,6 +106,9 @@ Stitchord 文档(JSON) --compile--> Ink/Stitch SVG --Ink/Stitch CLI--> StitchPla
 | 曲线拟合 / 简化 | RDP + 三次贝塞尔拟合 | 高 | 控制节点数与最小特征宽度 |
 | 矢量化优化 | diffvg 可微渲染 | 中 | 用像素损失微调曲线，适合 logo |
 | 绣法分类 | 宽度/长宽比/骨架分析 | 中 | 大面→tatami，细长→satin，线→running |
+
+> 上表的“成熟度”是工程判断，不是 E2/E3 证据；进入 P3 前必须用基准集实测。
+> `TODO(verify)`：SAM2 / BiRefNet / RMBG 等模型与权重的许可证（有的限制商用），未确认不得上线。
 
 ### 6.2 不能直接用的
 
@@ -125,8 +137,10 @@ Stitchord 文档(JSON) --compile--> Ink/Stitch SVG --Ink/Stitch CLI--> StitchPla
 2. 图像矫正 / 去褶皱 / 线迹增强；
 3. 针脚检测（方向滤波 + 分割网络）与线色聚类；
 4. 图结构追踪得到候选针迹，再做序列推断；
-5. 以 Chamfer 距离、stitch-level F1、色块数误差评估；
-6. 达不到阈值就明确停止，不把 R&D 包装成功能。
+5. 以 Chamfer 距离、stitch-level F1、色块数误差评估；F1 的匹配规则必须预先定义
+   （建议：同色块内，预测针与参考针端点距离 ≤ 1.0 mm 且方向差 ≤ 30° 记为匹配）；
+6. 50 组数据只够“评测/可行性”，不足以训练大模型；需要时另行扩采；
+7. 达不到阈值就明确停止，不把 R&D 包装成功能。
 
 ## 7. 能力缺口（需要自研）
 

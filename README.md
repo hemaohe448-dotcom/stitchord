@@ -4,16 +4,17 @@
 
 Stitchord 不是 Inkscape 的网页壳，也不是把开源项目简单拼在一起。它由三层组成：
 
-1. **编辑层**：Illustrator 式的图层 / 对象 / 针迹参数编辑，非破坏式改针；
+1. **编辑层**：图层 / 对象 / 针迹参数编辑（目标是 Illustrator 式的可控性，不是复刻其 UI），非破坏式改针；
 2. **编译层**：把工程文档确定性编译为 Ink/Stitch 可消费的 SVG，再产出针迹计划与机器文件；
 3. **智能层**：图像分割 → 矢量化 → 绣法规划（自动制版），以及后续的实物照片针迹反推。
 
 ## 当前状态
 
-**Phase 0（工程地基）** — 仓库脚手架、契约、可行性结论、路线图、多智能体协作规范。
+**Phase 0（工程地基）已完成；Phase 1（Ink/Stitch 无头编译）进行中。**
 
-本仓库暂不声称已打通 Ink/Stitch 无头导出；该结论必须由 Phase 1 的契约测试证明，见
-[路线图](docs/03-roadmap.md) 与 [可行性报告](docs/01-feasibility.md)。
+已用固定的 Ink/Stitch commit 在无 Inkscape 的进程内跑通
+“SVG 路径 → StitchPlan → DST”，输出可复现；但 wxPython 是 import 硬依赖，参数映射与黄金语料仍待完成。
+见 [无头验证报告](docs/research/inkstitch-headless.md)。
 
 ## 目录
 
@@ -57,4 +58,4 @@ Windows PowerShell 下可参考 [`docs/06-dev-setup.md`](docs/06-dev-setup.md)�
 ## 许可证
 
 本项目采用 **GPL-3.0-or-later**。原因与商业影响见 [ADR-0001](docs/adr/0001-license-gpl.md)。
-Ink/Stitch 与 Embroiderly 均为 GPL-3.0；任何直接复用其代码的分发形态都必须满足 GPL 义务。
+Ink/Stitch 与 Embroiderly 均为 GPL-3.0 系（前者 GPL-3.0，后者 GPL-3.0-or-later）；任何直接复用其代码的分发形态都必须满足 GPL 义务。

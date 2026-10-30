@@ -10,8 +10,9 @@ import math
 
 from .models import StitchPlan, ValidationIssue, ValidationReport
 
-# 常见单针最大跨度（0.5 英寸 / 12.7 mm）；超过通常需要分段或跳针。
-MAX_STITCH_MM = 12.7
+# DST 单条记录最大位移 121 × 0.1 mm = 12.1 mm（pyembroidery DstWriter.py:7-8）。
+# 物理机器可能允许更长，但为保证 DST 可编码，静态上限取 12.1 mm；更长应拆分或跳针。
+MAX_STITCH_MM = 12.1
 # 低于该长度的针迹在多数面料上会堆线，通常应合并或删除。
 MIN_STITCH_MM = 0.5
 # 单色块针数上限的告警阈值（经验值，后续按机型配置）。

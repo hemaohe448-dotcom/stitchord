@@ -66,6 +66,18 @@ def test_plan_to_pattern_keeps_stich_count():
     assert len(stitched) == 5
 
 
+def test_validation_accepts_dst_limit():
+    plan = sample_plan()
+    plan.color_blocks[0].stitches = [Stitch(x=0, y=0), Stitch(x=12.1, y=0)]
+    plan.color_blocks[1].stitches = [
+        Stitch(x=20, y=0),
+        Stitch(x=20, y=5),
+        Stitch(x=20, y=5, command="END"),
+    ]
+    report = validate_plan(plan)
+    assert report.ok, report.issues
+
+
 def test_validation_flags_long_stitch():
     plan = sample_plan()
     plan.color_blocks[1].stitches.insert(1, Stitch(x=40, y=0))

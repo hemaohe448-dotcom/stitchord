@@ -21,7 +21,7 @@
 
 | 约束 | 默认值 | 说明 |
 | --- | --- | --- |
-| 单针最大长度 | 12.7 mm（0.5"） | 超过需拆分或改为跳针 + 分段 |
+| 单针最大长度 | 12.1 mm（DST 单条记录上限 121 × 0.1 mm；物理机可能允许 12.7 mm，但导出须拆分） | 超过需拆分或改为跳针 + 分段 |
 | 单针最小长度 | 0.5 mm | 低于易堆线；短于 0.2 mm 直接合并 |
 | 填充行距 | 0.35–0.5 mm | 视线径/面料；默认 0.4 mm |
 | 缎面密度 | 0.35–0.45 mm | 过密易断线/起皱 |
@@ -42,7 +42,7 @@ Phase 0 已实现（`services/digitizer/app/validation.py`）：
 | `EMPTY_BLOCK` | error | 色块无针 | 拒绝导出 |
 | `NO_STITCHES` | error | 无 STITCH | 拒绝导出 |
 | `DEGENERATE_BOUNDS` | error | 包围盒为 0 | 拒绝导出 |
-| `STITCH_TOO_LONG` | error | > 12.7 mm | 拒绝导出 |
+| `STITCH_TOO_LONG` | error | > 12.1 mm（DST 记录上限） | 拒绝导出 / 自动拆分 |
 | `STITCH_TOO_SHORT` | warning | < 0.5 mm | 提示合并 |
 | `ZERO_LENGTH_STITCH` | warning | 距离 = 0 | 提示删除 |
 | `BLOCK_TOO_LARGE` | warning | > 50k 针/色块 | 提示分块/分框 |
