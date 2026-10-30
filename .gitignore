@@ -1,0 +1,36 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build output
+dist/
+build/
+*.tsbuildinfo
+
+# python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+
+# env & secrets
+.env
+.env.*
+!.env.example
+
+# research clones (external code, never committed)
+.research/repos/
+
+# local tooling / caches
+.pylibs/
+.cache/
+.tmp/
+.venv/
+.pytest-tmp/
+
+# local artifacts
+artifacts/
+tmp/
+.DS_Store
+Thumbs.db

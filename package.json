@@ -1,0 +1,21 @@
+{
+  "name": "stitchord",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Stitchord — web-based, production-grade embroidery digitizing platform",
+  "license": "GPL-3.0-or-later",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @stitchord/web",
+    "build": "npm run build -w @stitchord/web",
+    "typecheck": "npm run typecheck -w @stitchord/web",
+    "test": "npm run test -w @stitchord/web",
+    "lint": "npm run lint -w @stitchord/web"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

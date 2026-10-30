@@ -1,0 +1,47 @@
+services:
+  api:
+    build:
+      context: ../services/digitizer
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      STITCHORD_CORS_ORIGINS: http://localhost:5173
+      STITCHORD_WORK_DIR: /tmp
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  web:
+    image: node:22-slim
+    working_dir: /repo
+    volumes:
+      - ..:/repo
+    command: sh -c "npm ci && npm run dev -w @stitchord/web -- --host 0.0.0.0"
+    ports:
+      - "5173:5173"
+    environment:
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+
+  # Phase 4 起启用
+  # postgres:
+  #   image: postgres:16-alpine
+  #   environment:
+  #     POSTGRES_PASSWORD: stitchord
+  #     POSTGRES_DB: stitchord
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+  # redis:
+  #   image: redis:7-alpine
+  # minio:
+  #   image: minio/minio
+  #   command: server /data --console-address ":9001"
+  #   environment:
+  #     MINIO_ROOT_USER: stitchord
+  #     MINIO_ROOT_PASSWORD: stitchord-dev
+
+# volumes:
+#   pgdata:

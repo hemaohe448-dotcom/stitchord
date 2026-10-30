@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stitchord.local/schemas/stitch-plan-1.0.json",
+  "title": "StitchPlan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "unit", "bounds", "colorBlocks", "stats"],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "unit": { "const": "mm" },
+    "bounds": { "$ref": "#/$defs/bounds" },
+    "colorBlocks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/colorBlock" }
+    },
+    "stats": { "$ref": "#/$defs/stats" }
+  },
+  "$defs": {
+    "bounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minX", "minY", "maxX", "maxY"],
+      "properties": {
+        "minX": { "type": "number" },
+        "minY": { "type": "number" },
+        "maxX": { "type": "number" },
+        "maxY": { "type": "number" }
+      }
+    },
+    "threadColor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hex"],
+      "properties": {
+        "hex": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+        "name": { "type": ["string", "null"] },
+        "brand": { "type": ["string", "null"] },
+        "code": { "type": ["string", "null"] }
+      }
+    },
+    "stitch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "command"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "command": {
+          "enum": ["STITCH", "JUMP", "TRIM", "STOP", "END", "NEEDLE_AT", "UNKNOWN"]
+        }
+      }
+    },
+    "colorBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "color", "stitches"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "color": { "$ref": "#/$defs/threadColor" },
+        "stitches": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/stitch" }
+        }
+      }
+    },
+    "stats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stitchCount", "jumpCount", "trimCount", "colorChanges", "colorBlocks"],
+      "properties": {
+        "stitchCount": { "type": "integer", "minimum": 0 },
+        "jumpCount": { "type": "integer", "minimum": 0 },
+        "trimCount": { "type": "integer", "minimum": 0 },
+        "colorChanges": { "type": "integer", "minimum": 0 },
+        "colorBlocks": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}
