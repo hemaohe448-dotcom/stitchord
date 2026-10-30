@@ -83,7 +83,10 @@ fill/running/satin + PES，面料预设（woven/knit 实测差异），
 删除、图层排序、撤销重做、自动重编译、localStorage 持久化、工程 JSON 保存/打开、
 复制对象与键盘快捷键、曲线/折线节点编辑、自由绘制走线、图层显隐/删除、
 打底预览开关、多选与批量操作、SVG 导入、针迹播放预览、导出。
-**未实现**：锁定/合并/布尔、起收针/锁针、密度、100 步上限、Playwright、局部重算。
+**未实现**：锁定/合并/布尔、起收针/锁针、密度、Playwright、局部重算。
+
+**已部分实现**：undo 栈统一截到 100 步（`pushHistory`，前端 17 tests）；完整 P2-AC2 仍需
+Playwright 验证“100 次撤销后 hash 一致”。
 
 **Roidery 门槛（2026-10-30）**：GitHub Actions 构建 `vectorcraft-cli` 成功（15m 10s，
 DST 4,721 B）。仅证明可构建/最小导出；接入评估见 `docs/tasks/T-0202-roidery-integration.md`，

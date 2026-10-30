@@ -13,7 +13,7 @@
 - [x] 多智能体协作/防幻觉/上下文规范；
 - [x] 前端骨架：DST/PES 导入 → StitchPlan → Canvas 渲染 → 导出 DST；
 - [x] 后端骨架：预览 / 校验 / 导出 API；
-- [x] 测试：前端 15 个单测，后端 74 个单测/契约测试（3.11 全量）；
+- [x] 测试：前端 17 个单测，后端 74 个单测/契约测试（3.11 全量）；
 - [x] 构建：`tsc --noEmit`、`vite build` 通过；
 - [x] Claude 独立架构评审（`docs/reviews/2026-10-30-architecture-review.md`），阻断项已处置
   （`docs/reviews/2026-10-30-response.md`）；
@@ -75,8 +75,10 @@
 - [x] **结果缓存**：按文档 JSON + 格式做 32 项 LRU，导出返回 `X-Stitch-Cache: hit/miss`；
   不改“文档→SVG→Ink/Stitch”主链路。
 - [x] **P2 针迹播放**：播放/暂停、进度条、慢/中/快、当前针高亮；仅前端，构建通过；
-- [x] **ADR-0006 门槛通过（2026-10-30）**：GitHub Actions 成功构建 `vectorcraft-cli`，
-  15m 10s，导出 DST 4,721 B；**仅证明可构建/最小导出**，下一步 T-0202 集成评估。
+- [x] **历史上限**：前端 undo 栈统一经 `pushHistory` 截到 100 步；前端 17 个单测。
+- [x] **ADR-0006 用户决策**：选 **A**——自研编辑器优先，Roidery 仅评估，不替换运行时。
+- [x] **ADR-0006 门槛通过（2026-10-30）**：CI 成功构建 `vectorcraft-cli`（15m 10s，
+  DST 4,721 B）；仅证明可构建/最小导出，T-0202 静态评估中。
 - [x] 发现并记录：wxPython 是 import 硬依赖、必须关闭磁盘缓存、plan(px) 与 DST(0.1mm/居中) 的差异。
 
 ## 进行中

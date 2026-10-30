@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { StitchPlan } from "@stitchord/contracts";
 import { makeMockPlan } from "./mock";
+import { pushHistory } from "./history";
 import { buildSampleDocument } from "./sampleDoc";
 import { serializePolyline } from "./path";
 import type {
@@ -169,7 +170,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const { doc, past } = get();
     if (!doc) return;
     const next = mapObject(doc, id, (obj) => ({ ...obj, ...patch }));
-    set({ doc: next, past: [...past, doc], future: [] });
+    set({ doc: next, past: pushHistory(past, doc), future: [] });
   },
 
   updateStitch: (id, patch) => {
@@ -179,7 +180,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       ...obj,
       stitch: { ...obj.stitch, ...patch },
     }));
-    set({ doc: next, past: [...past, doc], future: [] });
+    set({ doc: next, past: pushHistory(past, doc), future: [] });
   },
 
   setTranslate: (id, value, commit) => {
@@ -191,7 +192,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       return;
     }
     const base = dragBase ?? doc;
-    set({ doc: next, past: [...past, base], future: [], dragBase: null });
+    set({ doc: next, past: pushHistory(past, base), future: [], dragBase: null });
   },
 
   setPath: (id, pathD, commit) => {
@@ -203,7 +204,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       return;
     }
     const base = dragBase ?? doc;
-    set({ doc: next, past: [...past, base], future: [], dragBase: null });
+    set({ doc: next, past: pushHistory(past, base), future: [], dragBase: null });
   },
 
   setTranslations: (entries, commit) => {
@@ -221,7 +222,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       return;
     }
     const base = dragBase ?? doc;
-    set({ doc: next, past: [...past, base], future: [], dragBase: null });
+    set({ doc: next, past: pushHistory(past, base), future: [], dragBase: null });
   },
 
   addRectangle: () => {
@@ -232,7 +233,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       ...doc,
       layers: [...doc.layers, { id: layerId, name: "rect", objects: [obj] }],
     };
-    set({ doc: next, past: [...past, doc], future: [], selectedId: obj.id, selectedIds: [obj.id] });
+    set({ doc: next, past: pushHistory(past, doc), future: [], selectedId: obj.id, selectedIds: [obj.id] });
   },
 
   addLine: () => {
@@ -253,7 +254,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         { id: `layer-line-${Date.now()}`, name: "line", objects: [obj] },
       ],
     };
-    set({ doc: next, past: [...past, doc], future: [], selectedId: obj.id, selectedIds: [obj.id] });
+    set({ doc: next, past: pushHistory(past, doc), future: [], selectedId: obj.id, selectedIds: [obj.id] });
   },
 
   addFreehand: (points) => {
@@ -274,7 +275,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         { id: `layer-draw-${Date.now()}`, name: "freehand", objects: [obj] },
       ],
     };
-    set({ doc: next, past: [...past, doc], future: [], selectedId: id, selectedIds: [id] });
+    set({ doc: next, past: pushHistory(past, doc), future: [], selectedId: id, selectedIds: [id] });
   },
 
   duplicateSelected: () => {
@@ -310,7 +311,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     if (!last) return;
     set({
       doc: { ...doc, layers },
-      past: [...past, doc],
+      past: pushHistory(past, doc),
       future: [],
       selectedId: last.id,
       selectedIds: created.map((copy) => copy.id),
@@ -332,7 +333,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       .filter((layer) => layer.objects.length > 0);
     set({
       doc: { ...doc, layers },
-      past: [...past, doc],
+      past: pushHistory(past, doc),
       future: [],
       selectedId: null,
       selectedIds: [],
@@ -347,7 +348,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     if (index < 0 || target < 0 || target >= doc.layers.length) return;
     const layers = [...doc.layers];
     [layers[index], layers[target]] = [layers[target], layers[index]];
-    set({ doc: { ...doc, layers }, past: [...past, doc], future: [] });
+    set({ doc: { ...doc, layers }, past: pushHistory(past, doc), future: [] });
   },
 
   toggleLayer: (layerId) => {
@@ -360,7 +361,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const layers = doc.layers.map((layer) =>
       layer.id === layerId ? { ...layer, visible: layer.visible === false } : layer,
     );
-    set({ doc: { ...doc, layers }, past: [...past, doc], future: [] });
+    set({ doc: { ...doc, layers }, past: pushHistory(past, doc), future: [] });
   },
 
   deleteLayer: (layerId) => {
@@ -368,7 +369,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     if (!doc || doc.layers.length <= 1) return;
     set({
       doc: { ...doc, layers: doc.layers.filter((layer) => layer.id !== layerId) },
-      past: [...past, doc],
+      past: pushHistory(past, doc),
       future: [],
       selectedId: null,
       selectedIds: [],
@@ -378,7 +379,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setFabric: (fabric) => {
     const { doc, past } = get();
     if (!doc) return;
-    set({ doc: { ...doc, fabric }, past: [...past, doc], future: [] });
+    set({ doc: { ...doc, fabric }, past: pushHistory(past, doc), future: [] });
   },
 
   undo: () => {
@@ -400,7 +401,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const next = future[0];
     set({
       doc: next,
-      past: [...past, doc],
+      past: pushHistory(past, doc),
       future: future.slice(1),
       selectedId: null,
       selectedIds: [],
