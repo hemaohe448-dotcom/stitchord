@@ -53,6 +53,27 @@ def test_project_crud(tmp_path, monkeypatch):
     assert updated.status_code == 200
     assert client.get(f"/v1/projects/{project_id}").json()["name"] == "Order #2"
 
+    stale = client.put(
+        f"/v1/projects/{project_id}",
+        json={
+            "name": "stale",
+            "document": DOCUMENT,
+            "expectedUpdatedAt": "2000-01-01T00:00:00+00:00",
+        },
+    )
+    assert stale.status_code == 409
+
+    current = client.get(f"/v1/projects/{project_id}").json()["updatedAt"]
+    fresh = client.put(
+        f"/v1/projects/{project_id}",
+        json={
+            "name": "Order #3",
+            "document": DOCUMENT,
+            "expectedUpdatedAt": current,
+        },
+    )
+    assert fresh.status_code == 200, fresh.text
+
     deleted = client.delete(f"/v1/projects/{project_id}")
     assert deleted.status_code == 204
     assert client.get(f"/v1/projects/{project_id}").status_code == 404

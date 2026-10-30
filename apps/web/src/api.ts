@@ -175,11 +175,16 @@ export async function updateProject(
   id: string,
   name: string,
   document: CompileDocument,
+  expectedUpdatedAt?: string | null,
 ): Promise<ProjectSummary> {
   const response = await fetch(`/api/v1/projects/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, document }),
+    body: JSON.stringify({
+      name,
+      document,
+      expectedUpdatedAt: expectedUpdatedAt ?? undefined,
+    }),
   });
   if (!response.ok) throw new Error(await readError(response));
   return (await response.json()) as ProjectSummary;

@@ -90,6 +90,7 @@ class WorksheetRequest(ContractModel):
 class ProjectWrite(ContractModel):
     name: str = Field(min_length=1, max_length=120)
     document: dict
+    expected_updated_at: str | None = None
 
 
 class Severity(str):

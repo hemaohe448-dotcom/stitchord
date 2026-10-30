@@ -80,14 +80,26 @@ def get_project(project_id: str) -> dict | None:
     }
 
 
-def update_project(project_id: str, name: str, document: dict) -> bool:
+def update_project(
+    project_id: str,
+    name: str,
+    document: dict,
+    expected_updated_at: str | None = None,
+) -> str | None:
     now = _now()
     with _connect() as connection:
-        cursor = connection.execute(
-            "UPDATE projects SET name = ?, document = ?, updated_at = ? WHERE id = ?",
-            (name[:120], json.dumps(document), now, project_id),
-        )
-    return cursor.rowcount > 0
+        if expected_updated_at is None:
+            cursor = connection.execute(
+                "UPDATE projects SET name = ?, document = ?, updated_at = ? WHERE id = ?",
+                (name[:120], json.dumps(document), now, project_id),
+            )
+        else:
+            cursor = connection.execute(
+                "UPDATE projects SET name = ?, document = ?, updated_at = ? "
+                "WHERE id = ? AND updated_at = ?",
+                (name[:120], json.dumps(document), now, project_id, expected_updated_at),
+            )
+    return now if cursor.rowcount > 0 else None
 
 
 def delete_project(project_id: str) -> bool:

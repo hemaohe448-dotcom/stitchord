@@ -152,13 +152,24 @@ def get_project(project_id: str) -> dict:
 @app.put("/v1/projects/{project_id}")
 def update_project(project_id: str, request: ProjectWrite) -> dict:
     document = _validated_document(request.document)
-    if not storage.update_project(
+    updated_at = storage.update_project(
         project_id,
         request.name,
         document.model_dump(by_alias=True, mode="json"),
-    ):
-        raise HTTPException(status_code=404, detail="project not found")
-    return {"id": project_id, "name": request.name}
+        expected_updated_at=request.expected_updated_at,
+    )
+    if updated_at is None:
+        if storage.get_project(project_id) is None:
+            raise HTTPException(status_code=404, detail="project not found")
+        raise HTTPException(
+            status_code=409,
+            detail="project was updated elsewhere; reload before saving",
+        )
+    return {
+        "id": project_id,
+        "name": request.name,
+        "updatedAt": updated_at,
+    }
 
 
 @app.delete("/v1/projects/{project_id}", status_code=204)

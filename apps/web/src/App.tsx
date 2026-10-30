@@ -129,6 +129,7 @@ export default function App() {
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [showProjects, setShowProjects] = useState(false);
   const [serverProjectId, setServerProjectId] = useState<string | null>(null);
+  const [serverUpdatedAt, setServerUpdatedAt] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState("示例工程 · 正在生成针迹…");
 
@@ -235,9 +236,10 @@ export default function App() {
       const name =
         doc.name?.trim() || `工程 ${new Date().toLocaleString("zh-CN")}`;
       const saved = serverProjectId
-        ? await updateProject(serverProjectId, name, doc)
+        ? await updateProject(serverProjectId, name, doc, serverUpdatedAt)
         : await saveProject(name, doc);
       setServerProjectId(saved.id);
+      setServerUpdatedAt(saved.updatedAt);
       setNotice(`已保存到服务器 · ${saved.name}`);
       setProjects(await listProjects());
       setShowProjects(true);
@@ -263,6 +265,7 @@ export default function App() {
       const project = await loadProject(id);
       setDoc(project.document);
       setServerProjectId(project.id);
+      setServerUpdatedAt(project.updatedAt);
       setNotice(`已从服务器打开 · ${project.name}`);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
@@ -284,6 +287,7 @@ export default function App() {
     setBusy(true);
     setError(null);
     setServerProjectId(null);
+    setServerUpdatedAt(null);
     try {
       if (file.name.toLowerCase().endsWith(".svg")) {
         const result = await importSvg(file, 100);
@@ -314,6 +318,7 @@ export default function App() {
     setBusy(true);
     setError(null);
     setServerProjectId(null);
+    setServerUpdatedAt(null);
     try {
       const detail =
         vectorDetail === "high"
@@ -367,6 +372,7 @@ export default function App() {
       }
       setDoc(parsed);
       setServerProjectId(null);
+    setServerUpdatedAt(null);
       setNotice(`${file.name} · 已打开工程`);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
@@ -766,6 +772,7 @@ export default function App() {
                 className="button"
                 onClick={() => {
                   setServerProjectId(null);
+    setServerUpdatedAt(null);
                   newSample();
                 }}
                 disabled={busy}
