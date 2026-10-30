@@ -93,6 +93,8 @@
 - [x] **服务端工程库（单租户）**：SQLite `/v1/projects` CRUD；网页“保存到服务器/项目库”；
   从服务器打开后再保存走 PUT，不会重复新建；PUT 带 `expectedUpdatedAt`，
   过期写返回 409，避免静默覆盖；无认证/多租户；
+- [x] **界面错误边界**：React `ErrorBoundary` 防止白屏，提示工程仍在 localStorage；
+- [x] **验收状态文档**：`docs/09-acceptance-status.md` 区分已交付/未验证/生产门禁。
 - [x] **就绪探针**：`/ready` 检查 Ink/Stitch import；`/health` 仍只表示进程存活，
   compose healthcheck 已改用 `/ready`。
 - [x] **上机规则扩展**：跳针过长、跳针比例过高、剪线过多、色块过多均给出 warning；

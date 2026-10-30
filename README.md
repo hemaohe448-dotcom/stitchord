@@ -59,6 +59,7 @@ Windows PowerShell 下可参考 [`docs/06-dev-setup.md`](docs/06-dev-setup.md)�
 | [07 GitHub Actions 操作手册](docs/07-github-actions-guide.md) | 小白版：上传仓库、手动跑构建、取结果 |
 | [参数依据](docs/reference/parameters.md) | Ink/Stitch + Wilcom + Roidery 的密度/补偿/打底 |
 | [机器格式矩阵](docs/reference/machine-formats.md) | 6 种导出格式的字节/针数/线色/读回结果 |
+| [验收状态](docs/09-acceptance-status.md) | 已交付 / 未验证 / 生产门禁，一页看清 |
 | [工艺单 PDF](services/digitizer/app/worksheet.py) | 预览 + 参数 + 线色顺序 + 估算线量/工时 |
 | [ADRs](docs/adr/) | 关键决策记录 |
 
