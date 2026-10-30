@@ -1,9 +1,10 @@
 import { useRef, useState } from "react";
 import type { ChangeEvent, DragEvent } from "react";
 import type { StitchPlan } from "@stitchord/contracts";
-import { downloadBlob, digitizeDocument, exportStitch, previewStitch } from "./api";
+import { downloadBlob, digitizeDocument, digitizeExport, exportStitch, previewStitch } from "./api";
 import { StitchCanvas } from "./canvas/StitchCanvas";
 import { buildSampleDocument, FABRICS } from "./sampleDoc";
+import type { CompileDocument } from "./sampleDoc";
 import { useEditorStore } from "./store";
 
 const number = new Intl.NumberFormat("zh-CN");
@@ -30,6 +31,7 @@ export default function App() {
   const [generating, setGenerating] = useState(false);
   const [fabric, setFabric] = useState<string>("woven");
   const [stitchType, setStitchType] = useState<"fill" | "running">("fill");
+  const [lastDoc, setLastDoc] = useState<CompileDocument | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState("示例花样 · 选择面料后点击“生成针迹”");
 
@@ -37,7 +39,9 @@ export default function App() {
     setGenerating(true);
     setError(null);
     try {
-      const plan = await digitizeDocument(buildSampleDocument(fabric, stitchType));
+      const document = buildSampleDocument(fabric, stitchType);
+      const plan = await digitizeDocument(document);
+      setLastDoc(document);
       setPlan(plan);
       const fabricLabel =
         FABRICS.find((item) => item.id === fabric)?.label ?? fabric;
@@ -57,6 +61,7 @@ export default function App() {
     try {
       const next = await previewStitch(file);
       setPlan(next);
+      setLastDoc(null);
       setNotice(`${file.name} · ${next.stats.stitchCount.toLocaleString()} 针`);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
@@ -81,9 +86,15 @@ export default function App() {
     setBusy(true);
     setError(null);
     try {
-      const blob = await exportStitch(plan, "dst");
+      const blob = lastDoc
+        ? await digitizeExport(lastDoc)
+        : await exportStitch(plan, "dst");
       downloadBlob(blob, `stitchord-${Date.now()}.dst`);
-      setNotice("已导出 DST（经服务端校验）");
+      setNotice(
+        lastDoc
+          ? "已导出 DST（Ink/Stitch，与当前生成参数一致）"
+          : "已导出 DST（经服务端校验）",
+      );
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
