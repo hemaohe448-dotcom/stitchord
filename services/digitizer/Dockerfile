@@ -1,28 +1,35 @@
-FROM python:3.11-slim
+FROM ubuntu:22.04
 
-# Pinned worker inputs. Keep in sync with docs/versions.lock.md.
 ARG INKSTITCH_COMMIT=d22526223c2296044d9dd6145cc78de3bb0d5c75
 ARG INKEX_COMMIT=a887f9d4c8adacd62786e4f46c8ef1467bedc1df
-# No 4.3.2 Linux wheel exists; 4.2.5 is the newest cp311 wheel. Use the
-# Ubuntu 22.04 build (glibc 2.35) so it stays compatible with the Debian
-# bookworm base (glibc 2.36); Ubuntu 24.04 wheels need newer glibc.
+# No 4.3.2 Linux wheel exists. 4.2.5 is the newest cp311 wheel; using the
+# Ubuntu 22.04 build keeps binary ABI aligned with this base image.
 ARG WX_VERSION=4.2.5
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     STITCHORD_WORK_DIR=/tmp \
     STITCHORD_INKEX_PATH=/opt/inkex \
-    STITCHORD_INKSTITCH_PATH=/opt/inkstitch
+    STITCHORD_INKSTITCH_PATH=/opt/inkstitch \
+    PATH=/opt/venv/bin:$PATH
 
-# wxPython imports GTK at import time even when no GUI is shown.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        git libgtk-3-0 libglib2.0-0 libgl1 libglu1-mesa libsm6 libxext6 libxrender1 \
-        libsdl2-2.0-0 libnotify4 libjpeg62-turbo libtiff6 libpng16-16 libwebp7 \
+        software-properties-common ca-certificates curl git \
+    && add-apt-repository -y ppa:deadsnakes/ppa \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        python3.11 python3.11-venv python3.11-dev \
+        libgtk-3-0 libglib2.0-0 libgl1 libglu1-mesa libsm6 libxext6 libxrender1 \
+        libsdl2-2.0-0 libnotify4 libjpeg-turbo8 libtiff5 libwebp7 \
         libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 \
         libxtst6 libxi6 libxcursor1 libxrandr2 libxinerama1 libxfixes3 \
         libxcomposite1 libxdamage1 libxkbcommon0 libxkbcommon-x11-0 \
     && rm -rf /var/lib/apt/lists/*
+
+RUN python3.11 -m venv /opt/venv \
+    && pip install --no-cache-dir --upgrade pip
 
 RUN git clone https://github.com/inkstitch/inkstitch.git /opt/inkstitch \
     && git -C /opt/inkstitch checkout "${INKSTITCH_COMMIT}"
